@@ -1,7 +1,11 @@
-Work hasn't started yet.
+Got a week to work on this...
 
 Here are some features I would like to implement:
 
--Easy adding an expanse, for example after having paid a glass to a beautiful blond girl
--Easy consulting accounts status
--And a lot more!
+- Use SQLite to store data
+- Enter and edit data monthly
+- Support multi-currencies
+- Tricount offline
+- Connect to server
+- Tricount with other users
+
