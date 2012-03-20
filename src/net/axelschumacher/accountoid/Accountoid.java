@@ -7,11 +7,36 @@ import android.provider.BaseColumns;
  * Convenience definitions for Accountoid
  */
 public class Accountoid {
+	/**
+	 * Authority for tables storage
+	 */
 	public static final String AUTHORITY = "net.axelschumacher.accountoid";
 
+    /**
+     * The MIME type of {@link #CONTENT_URI} providing a directory.
+     */
+    public static final String BASE_CONTENT_TYPE = "vnd.android.cursor.dir/vnd.net.axelschumacher.accountoid";
+
+    /**
+     * The MIME type of a {@link #CONTENT_URI} sub-directory of a single item.
+     */
+    public static final String BASE_CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd.net.axelschumacher.accountoid";
+	
 	// This class cannot be instantiated
 	private Accountoid() {
 	}
+	
+	/**
+	 * Possible states for a spending
+	 */
+	public static enum States {
+		F_CASH,
+		F_CARD,
+		CASH,
+		CARD
+	}
+	
+	public static final States DEFAULT_STATE = States.CASH;
 	
 	/**
 	 * Categories table
@@ -21,6 +46,16 @@ public class Accountoid {
 		// This class cannot be instantiated
 		private Categories() {
 		}
+
+        /**
+         * The MIME type of {@link #CONTENT_URI} providing a directory of categories.
+         */
+        public static final String CONTENT_TYPE = BASE_CONTENT_TYPE + ".categories";
+
+        /**
+         * The MIME type of a {@link #CONTENT_URI} sub-directory of a single category.
+         */
+        public static final String CONTENT_ITEM_TYPE = BASE_CONTENT_ITEM_TYPE + ".categories";
 
 		/**
 		 * The content:// style URL for this table
@@ -45,6 +80,16 @@ public class Accountoid {
 		// This class cannot be instanciated
 		private Currencies() {
 		}
+
+        /**
+         * The MIME type of {@link #CONTENT_URI} providing a directory of currencies.
+         */
+        public static final String CONTENT_TYPE = BASE_CONTENT_TYPE + ".currencies";
+
+        /**
+         * The MIME type of a {@link #CONTENT_URI} sub-directory of a single currency.
+         */
+        public static final String CONTENT_ITEM_TYPE = BASE_CONTENT_ITEM_TYPE + ".currencies";
 
 		/**
 		 * The content:// style URL for this table
@@ -72,17 +117,27 @@ public class Accountoid {
 	/**
 	 * Accounts table
 	 */
-	public static final class Accounts implements BaseColumns {
+	public static final class Account implements BaseColumns {
 		
 		// This class cannot be instantiated
-		private Accounts() {
+		private Account() {
 		}
+
+        /**
+         * The MIME type of {@link #CONTENT_URI} providing a directory of accounts.
+         */
+        public static final String CONTENT_TYPE = BASE_CONTENT_TYPE + ".account";
+
+        /**
+         * The MIME type of a {@link #CONTENT_URI} sub-directory of a single account.
+         */
+        public static final String CONTENT_ITEM_TYPE = BASE_CONTENT_ITEM_TYPE + ".account";
 
 		/**
 		 * The content:// style URL for this table
 		 */
 		public static final Uri CONTENT_URI = Uri.parse("content://"
-				+ AUTHORITY + "/accounts");
+				+ AUTHORITY + "/account");
 
 		/**
 		 * The description of the spending
@@ -98,7 +153,7 @@ public class Accountoid {
 		 * Type: FLOAT
 		 * </P>
 		 */
-		public static final String SPENDING = "spending";
+		public static final String AMMOUNT = "spending";
 
 		/**
 		 * The spending Category ID
@@ -115,6 +170,14 @@ public class Accountoid {
 		 * </P>
 		 */
 		public static final String CURRENCY = "currency";
+		
+		/**
+		 * The spending state id
+		 * <P>
+		 * Type: INTEGER
+		 * </P>
+		 */
+		public static final String STATE = "state";
 		
 		/**
 		 * The timestamp of the spending
