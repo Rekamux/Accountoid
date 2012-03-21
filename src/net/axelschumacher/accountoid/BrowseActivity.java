@@ -3,56 +3,48 @@ package net.axelschumacher.accountoid;
 import java.util.Random;
 
 import net.axelschumacher.accountoid.Accountoid.Account;
-import android.util.Log;
 import android.app.ListActivity;
-import android.content.ComponentName;
-import android.content.ContentUris;
 import android.content.ContentValues;
-import android.content.Context;
-import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Color;
-import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.ContextMenu;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
-import android.view.ContextMenu.ContextMenuInfo;
 import android.widget.AdapterView;
-import android.widget.CursorAdapter;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 
 public class BrowseActivity extends ListActivity {
-    private static final String TAG = "BrowseActivity";
+    
+	/** Debug TAG */
+	private static final String TAG = "BrowseActivity";
+    
+	/** DB handler */
+	private AccountoidDataBase db;
+	
+	/** List adapter */
+	private SimpleCursorAdapter adapter;
+    
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
         
-        setDefaultKeyMode(DEFAULT_KEYS_SHORTCUT);
-
-        // If no data was given in the intent (because we were started
-        // as a MAIN activity), then use our default content provider.
-        // MANDATORY for cursor creation
-        Intent intent = getIntent();
-        if (intent.getData() == null) {
-            intent.setData(Account.CONTENT_URI);
-        }
+        db = new AccountoidDataBase(this);
 
         // Inform the list we provide context menus for items
         getListView().setOnCreateContextMenuListener(this);
-        Cursor cursor = managedQuery(getIntent().getData(),
-        		new String[]{Account._ID, Account.AMMOUNT, Account.DESCRIPTION},
-        		null, null, null);
-        SimpleCursorAdapter adapter = new SimpleCursorAdapter(
+        Cursor cursor = db.getAccountList();
+        adapter = new SimpleCursorAdapter(
         		this, R.layout.browse, cursor, 
         		new String[]{Account.AMMOUNT}, 
-        		new int[]{R.id.browse_list});
+        		new int[]{android.R.id.list});
         
         // To have a personalized render
         // http://stackoverflow.com/questions/4776936/modifying-simplecursoradapter-data
@@ -75,15 +67,13 @@ public class BrowseActivity extends ListActivity {
     
     public static final int MENU_ITEM_INSERT = 1;
     public static final int MENU_ITEM_DELETE = 2;
+    public static final int MENU_ITEM_DELETE_ALL = 3;
     
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
-        
-        Log.v(TAG, "onCreateOpetionMenu");
 
-        // This is our one standard application action -- inserting a
-        // new note into the list.
+        menu.add(0, MENU_ITEM_INSERT, 0, R.string.browse_add);
         menu.add(0, MENU_ITEM_INSERT, 0, R.string.browse_add);
 
         return true;
@@ -101,20 +91,39 @@ public class BrowseActivity extends ListActivity {
         switch (item.getItemId()) {
         case MENU_ITEM_INSERT:
             // Launch activity to insert a new item
-            addAmmount(getListView());
+            addAmmount();
             return true;
         }
         return super.onOptionsItemSelected(item);
     }
     
-    public void addAmmount(View v)
+    public void addAmmount()
     {
-    	Log.d(TAG, "Cliqued add ammount button");
+    	Log.d(TAG, "Add ammount");
 		ContentValues value = new ContentValues();
 		value.put(Account.DESCRIPTION, "BLAH");
 		Random r = new Random();
 		value.put(Account.AMMOUNT, (r.nextFloat()-0.5)*100.0);
-		getContentResolver().insert(Account.CONTENT_URI, value);
+		db.insertAccount(value);
+		// Update view
+		adapter.changeCursor(db.getAccountList());
+    }
+    
+    public void removeAmmount(long id)
+    {
+    	Log.d(TAG, "Remove ammount "+id);
+        db.deleteAccount(id);
+		// Update view
+    	// If I used a provider, it would have been done automatically
+		adapter.changeCursor(db.getAccountList());
+    }
+    
+    public void removeAllAccounts()
+    {
+    	Log.d(TAG, "Remove all ammounts");
+        db.deleteAllAccounts();
+		// Update view
+		adapter.changeCursor(db.getAccountList());
     }
 
     @Override
@@ -150,13 +159,9 @@ public class BrowseActivity extends ListActivity {
             return false;
         }
         
-        
-
         switch (item.getItemId()) {
             case MENU_ITEM_DELETE: {
-                // Delete the note that the context menu is for
-                Uri noteUri = ContentUris.withAppendedId(getIntent().getData(), info.id);
-                getContentResolver().delete(noteUri, null, null);
+            	removeAmmount(info.id);
                 return true;
             }
         }

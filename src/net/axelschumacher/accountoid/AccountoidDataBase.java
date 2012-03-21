@@ -4,7 +4,6 @@ import net.axelschumacher.accountoid.Accountoid.Account;
 import net.axelschumacher.accountoid.Accountoid.Categories;
 import net.axelschumacher.accountoid.Accountoid.Currencies;
 
-import android.content.ContentProvider;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
@@ -14,10 +13,9 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
-import android.text.TextUtils;
 import android.util.Log;
 
-public class AccountoidDataBase extends ContentProvider {
+public class AccountoidDataBase {
 
     private static final String TAG = "AccountoidProvider";
 
@@ -75,57 +73,45 @@ public class AccountoidDataBase extends ContentProvider {
 	}
 
     private DatabaseHelper openHelper;
-
-	@Override
-	public boolean onCreate() {
-		openHelper = new DatabaseHelper(getContext());
+    
+    public AccountoidDataBase(Context context) {
+		openHelper = new DatabaseHelper(context);
 		Log.d(TAG, "Created provider");
+	}
+
+	public boolean onCreate() {
 		return true;
 	}
 	
-	@Override
-	public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs,
-            String sortOrder) {
+	public Cursor getAccountList() {
         SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
         qb.setTables(ACCOUNT_TABLE_NAME);
 
-        // If no sort order is specified use the default
         String orderBy;
-        if (TextUtils.isEmpty(sortOrder)) {
-            orderBy = Accountoid.Account.DEFAULT_SORT_ORDER;
-        } else {
-            orderBy = sortOrder;
-        }
+        orderBy = Accountoid.Account.DEFAULT_SORT_ORDER;
+        
+        String projection[] = {Account._ID, Account.AMMOUNT, Account.DESCRIPTION};
         
         // Get the database and run the query
         SQLiteDatabase db = openHelper.getReadableDatabase();
-        Cursor c = qb.query(db, projection, selection, selectionArgs, null, null, orderBy);
-
-        // Tell the cursor what uri to watch, so it knows when its source data changes
-        c.setNotificationUri(getContext().getContentResolver(), uri);
+        Cursor c = qb.query(db, projection, null, null, null, null, orderBy);
+        
         return c;
 	}
     
-	@Override
-	public int delete(Uri uri, String where, String[] whereArgs) {
+	public boolean deleteAccount(long id) {
 		 SQLiteDatabase db = openHelper.getWritableDatabase();
 		 int count;
-		 String noteId = uri.getPathSegments().get(1);
-		 count = db.delete(ACCOUNT_TABLE_NAME, Account._ID + "=" + noteId
-                 + (!TextUtils.isEmpty(where) ? " AND (" + where + ')' : ""), whereArgs);
+		 count = db.delete(ACCOUNT_TABLE_NAME, Account._ID + "=" + id, null);
 		 
-		 getContext().getContentResolver().notifyChange(uri, null);
-		 
-		 return count;
+		 return count == 1;
 	}
 
-	@Override
-	public String getType(Uri uri) {
-		return Account.CONTENT_TYPE;
+	public void deleteAllAccounts() {
+		 openHelper.getWritableDatabase().delete(ACCOUNT_TABLE_NAME, null, null);
 	}
 
-	@Override
-	public Uri insert(Uri uri, ContentValues initialValues) {
+	public Uri insertAccount(ContentValues initialValues) {
 
 		// Values to be inserted
         ContentValues values;
@@ -155,21 +141,18 @@ public class AccountoidDataBase extends ContentProvider {
         long rowId = db.insert(ACCOUNT_TABLE_NAME, null, values);
         if (rowId > 0) {
             Uri noteUri = ContentUris.withAppendedId(Account.CONTENT_URI, rowId);
-            getContext().getContentResolver().notifyChange(noteUri, null);
             return noteUri;
         }
         
-        throw new SQLException("Failed to insert row into " + uri);
+        throw new SQLException("Failed to insert row into " + ACCOUNT_TABLE_NAME);
 	}
 
-    @Override
-    public int update(Uri uri, ContentValues values, String where, String[] whereArgs) {
+    public boolean updateAccount(int id, ContentValues values) {
         SQLiteDatabase db = openHelper.getWritableDatabase();
         int count;
-        count = db.update(ACCOUNT_TABLE_NAME, values, where, whereArgs);
+        count = db.update(ACCOUNT_TABLE_NAME, values, Account._ID +"="+id, null);
 
-        getContext().getContentResolver().notifyChange(uri, null);
-        return count;
+        return count == 1;
     }
 
 }
