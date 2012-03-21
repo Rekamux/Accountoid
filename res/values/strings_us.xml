@@ -2,5 +2,6 @@
 <resources>
     <string name="app_name">Accountoid</string>
     <string name="browse_add">Add a transaction</string>
+    <string name="browse_delete">Delete entry</string>
 
 </resources>

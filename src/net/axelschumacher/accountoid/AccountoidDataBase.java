@@ -5,7 +5,6 @@ import net.axelschumacher.accountoid.Accountoid.Categories;
 import net.axelschumacher.accountoid.Accountoid.Currencies;
 
 import android.content.ContentProvider;
-import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
@@ -18,7 +17,7 @@ import android.net.Uri;
 import android.text.TextUtils;
 import android.util.Log;
 
-public class AccountoidProvider extends ContentProvider {
+public class AccountoidDataBase extends ContentProvider {
 
     private static final String TAG = "AccountoidProvider";
 
@@ -27,6 +26,13 @@ public class AccountoidProvider extends ContentProvider {
 	private static final String ACCOUNT_TABLE_NAME = "account";
 	private static final String CATEGORIES_TABLE_NAME = "categories";
 	private static final String CURRENCIES_TABLE_NAME = "currencies";
+	
+	public enum Tables
+	{
+		ACCOUNT,
+		CATEGORIES,
+		CURRENCIES
+	}
 
 	/**
 	 * This class helps open, create, and upgrade the database file.
@@ -104,7 +110,9 @@ public class AccountoidProvider extends ContentProvider {
 	public int delete(Uri uri, String where, String[] whereArgs) {
 		 SQLiteDatabase db = openHelper.getWritableDatabase();
 		 int count;
-		 count = db.delete(ACCOUNT_TABLE_NAME, where, whereArgs);
+		 String noteId = uri.getPathSegments().get(1);
+		 count = db.delete(ACCOUNT_TABLE_NAME, Account._ID + "=" + noteId
+                 + (!TextUtils.isEmpty(where) ? " AND (" + where + ')' : ""), whereArgs);
 		 
 		 getContext().getContentResolver().notifyChange(uri, null);
 		 

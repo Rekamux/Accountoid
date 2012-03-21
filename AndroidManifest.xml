@@ -5,13 +5,13 @@
     android:versionCode="1"
     android:versionName="1.0" >
 
-    <uses-sdk android:minSdkVersion="8" />
+    <uses-sdk android:minSdkVersion="10" />
 
     <application
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name" >
         <provider
-            android:name=".AccountoidProvider"
+            android:name=".AccountoidDataBase"
             android:authorities="net.axelschumacher.accountoid" />
 
         <activity
