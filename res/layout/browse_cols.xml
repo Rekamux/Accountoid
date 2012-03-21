@@ -3,23 +3,16 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:orientation="vertical" >
-    
-    <Button xmlns:android="http://schemas.android.com/apk/res/android"
-        android:id="@+id/browse_button"
-        android:text="@string/browse_add"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:onClick="addAmmount"
-        />
 
-    <ListView
+    <TextView
         xmlns:android="http://schemas.android.com/apk/res/android"
-        android:id="@android:id/list"
+        android:id="@+id/browse_cols_text1"
         android:layout_width="match_parent"
-        android:layout_height="fill_parent"
+        android:layout_height="?android:attr/listPreferredItemHeight"
+        android:gravity="center_vertical"
         android:paddingLeft="5dip"
         android:singleLine="true"
         android:textAppearance="?android:attr/textAppearanceLarge" >
-    </ListView>
+    </TextView>
 
 </LinearLayout>

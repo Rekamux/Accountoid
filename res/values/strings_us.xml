@@ -4,5 +4,10 @@
     <string name="browse_add">Add a transaction</string>
     <string name="browse_delete">Delete entry</string>
     <string name="splash">Splash</string>
+    <string name="browse_delete_all">Delete all entries</string>
+    <string name="delete_all_confirm_message">Do you really want to delete all entries ?</string>
+    <string name="delete_all_confirm_title">Delete all entries</string>
+    <string name="yes">yes</string>
+    <string name="no">no</string>
 
 </resources>

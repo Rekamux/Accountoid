@@ -3,8 +3,13 @@ package net.axelschumacher.accountoid;
 import java.util.Random;
 
 import net.axelschumacher.accountoid.Accountoid.Account;
+import android.app.AlertDialog;
+import android.app.AlertDialog.Builder;
+import android.app.Dialog;
 import android.app.ListActivity;
 import android.content.ContentValues;
+import android.content.DialogInterface;
+import android.content.DialogInterface.OnClickListener;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -35,16 +40,19 @@ public class BrowseActivity extends ListActivity {
     public void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.browse);
         
         db = new AccountoidDataBase(this);
 
         // Inform the list we provide context menus for items
         getListView().setOnCreateContextMenuListener(this);
+        
+        
         Cursor cursor = db.getAccountList();
         adapter = new SimpleCursorAdapter(
-        		this, R.layout.browse, cursor, 
-        		new String[]{Account.AMMOUNT}, 
-        		new int[]{android.R.id.list});
+        		this, R.layout.browse_cols, cursor, 
+        		new String[]{Account.AMMOUNT},
+        		new int[]{R.id.browse_cols_text1});
         
         // To have a personalized render
         // http://stackoverflow.com/questions/4776936/modifying-simplecursoradapter-data
@@ -69,12 +77,41 @@ public class BrowseActivity extends ListActivity {
     public static final int MENU_ITEM_DELETE = 2;
     public static final int MENU_ITEM_DELETE_ALL = 3;
     
+    public static final int DIALOG_DELETE_ALL = 1;
+    
+    @Override
+    protected Dialog onCreateDialog(int id) {
+    	Dialog box = null;
+    	switch (id) {
+		case DIALOG_DELETE_ALL:
+
+	    	AlertDialog.Builder alert = new Builder(this);
+	    	alert.setMessage(R.string.delete_all_confirm_message);
+	    	alert.setTitle(R.string.delete_all_confirm_title);
+	    	alert.setPositiveButton(R.string.yes, new OnClickListener()
+	    	{
+	    		@Override
+				public void onClick(DialogInterface dialog, int which) {
+					removeAllAccounts();
+				}
+	    	});
+	    	alert.setCancelable(true);
+	    	alert.setNegativeButton(R.string.no, null);
+	    	box = alert.create();
+			break;
+
+		default:
+			break;
+		}
+    	return box;
+    }
+    
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
 
         menu.add(0, MENU_ITEM_INSERT, 0, R.string.browse_add);
-        menu.add(0, MENU_ITEM_INSERT, 0, R.string.browse_add);
+        menu.add(0, MENU_ITEM_DELETE_ALL, 0, R.string.browse_delete_all);
 
         return true;
     }
@@ -91,13 +128,16 @@ public class BrowseActivity extends ListActivity {
         switch (item.getItemId()) {
         case MENU_ITEM_INSERT:
             // Launch activity to insert a new item
-            addAmmount();
+            addAmmount(getCurrentFocus());
             return true;
+        case MENU_ITEM_DELETE_ALL:
+        	askRemoveAllAccounts();
+        	return true;
         }
         return super.onOptionsItemSelected(item);
     }
     
-    public void addAmmount()
+    public void addAmmount(View v)
     {
     	Log.d(TAG, "Add ammount");
 		ContentValues value = new ContentValues();
@@ -118,6 +158,11 @@ public class BrowseActivity extends ListActivity {
 		adapter.changeCursor(db.getAccountList());
     }
     
+    public void askRemoveAllAccounts()
+    {
+    	showDialog(DIALOG_DELETE_ALL);
+    }
+    
     public void removeAllAccounts()
     {
     	Log.d(TAG, "Remove all ammounts");
@@ -136,7 +181,7 @@ public class BrowseActivity extends ListActivity {
             return;
         }
 
-        Cursor cursor = (Cursor) getListAdapter().getItem(info.position);
+        Cursor cursor = (Cursor) adapter.getItem(info.position);
         if (cursor == null) {
             // For some reason the requested item isn't available, do nothing
             return;
