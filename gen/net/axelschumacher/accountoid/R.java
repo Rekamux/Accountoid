@@ -15,6 +15,8 @@ public final class R {
         public static final int ic_splash=0x7f020001;
     }
     public static final class id {
+        public static final int amount_field_edit=0x7f05000b;
+        public static final int amount_field_text=0x7f05000a;
         public static final int browse_button=0x7f050000;
         public static final int browse_cols_text1=0x7f050001;
         public static final int button1=0x7f050003;
@@ -23,7 +25,17 @@ public final class R {
         public static final int button4=0x7f050006;
         public static final int button5=0x7f050007;
         public static final int button6=0x7f050008;
+        public static final int category_field_edit=0x7f050011;
+        public static final int category_field_text=0x7f050010;
+        public static final int currency_field_edit=0x7f050013;
+        public static final int currency_field_text=0x7f050012;
+        public static final int date_field_edit=0x7f05000f;
+        public static final int date_field_text=0x7f05000e;
+        public static final int description_field_edit=0x7f05000d;
+        public static final int description_field_text=0x7f05000c;
         public static final int imageView1=0x7f050009;
+        public static final int state_field_edit=0x7f050015;
+        public static final int state_field_text=0x7f050014;
         public static final int textView1=0x7f050002;
     }
     public static final class layout {
@@ -31,16 +43,26 @@ public final class R {
         public static final int browse_cols=0x7f030001;
         public static final int main=0x7f030002;
         public static final int splash=0x7f030003;
+        public static final int transaction_editor=0x7f030004;
     }
     public static final class string {
+        public static final int amount_field=0x7f040009;
         public static final int app_name=0x7f040000;
         public static final int browse_add=0x7f040001;
         public static final int browse_delete=0x7f040002;
         public static final int browse_delete_all=0x7f040004;
+        public static final int browse_title=0x7f04000f;
+        public static final int category_field=0x7f04000e;
+        public static final int currency_field=0x7f04000c;
+        public static final int date_field=0x7f04000b;
         public static final int delete_all_confirm_message=0x7f040005;
         public static final int delete_all_confirm_title=0x7f040006;
+        public static final int description_field=0x7f04000a;
+        public static final int edit_accout_title=0x7f040010;
+        public static final int insert_account_title=0x7f040011;
         public static final int no=0x7f040008;
         public static final int splash=0x7f040003;
+        public static final int state_field=0x7f04000d;
         public static final int yes=0x7f040007;
     }
 }

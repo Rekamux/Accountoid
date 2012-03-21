@@ -50,7 +50,7 @@ public class AccountoidDataBase {
 					+ Account.DATE + " INTEGER,"
 					+ Account.STATE + " INTEGER,"
 					+ Account.DESCRIPTION + " TEXT,"
-					+ Account.AMMOUNT + " FLOAT"
+					+ Account.AMOUNT + " FLOAT"
 					+ ");");
 			db.execSQL("CREATE TABLE " + CATEGORIES_TABLE_NAME + " ("
 					+ Categories._ID + " INTEGER PRIMARY KEY,"
@@ -87,14 +87,28 @@ public class AccountoidDataBase {
         SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
         qb.setTables(ACCOUNT_TABLE_NAME);
 
-        String orderBy;
-        orderBy = Accountoid.Account.DEFAULT_SORT_ORDER;
+        String orderBy = Accountoid.Account.DEFAULT_SORT_ORDER;
         
-        String projection[] = {Account._ID, Account.AMMOUNT, Account.DESCRIPTION};
+        String projection[] = {Account._ID, Account.AMOUNT, Account.DESCRIPTION};
         
         // Get the database and run the query
         SQLiteDatabase db = openHelper.getReadableDatabase();
         Cursor c = qb.query(db, projection, null, null, null, null, orderBy);
+        
+        return c;
+	}
+
+	public Cursor getAccount(long id) {
+        SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
+        qb.setTables(ACCOUNT_TABLE_NAME);
+
+        String orderBy = Accountoid.Account.DEFAULT_SORT_ORDER;
+        
+        String where = Account._ID+" = "+id;
+        
+        // We want everything
+        SQLiteDatabase db = openHelper.getReadableDatabase();
+        Cursor c = qb.query(db, null, where, null, null, null, orderBy);
         
         return c;
 	}
@@ -132,7 +146,7 @@ public class AccountoidDataBase {
         	values.put(Account.DATE, now);
         if (!values.containsKey(Account.DESCRIPTION))
         	throw new IllegalArgumentException("A description must be specified");
-        if (!values.containsKey(Account.AMMOUNT))
+        if (!values.containsKey(Account.AMOUNT))
         	throw new IllegalArgumentException("A ammount must be specified");
         if (!values.containsKey(Account.STATE))
         	values.put(Account.STATE, Accountoid.DEFAULT_STATE.ordinal());

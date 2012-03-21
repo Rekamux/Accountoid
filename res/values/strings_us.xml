@@ -9,5 +9,14 @@
     <string name="delete_all_confirm_title">Delete all entries</string>
     <string name="yes">yes</string>
     <string name="no">no</string>
+    <string name="amount_field">Amount</string>
+    <string name="description_field">Description</string>
+    <string name="date_field">Date</string>
+    <string name="currency_field">Currency</string>
+    <string name="state_field">Transaction State</string>
+    <string name="category_field">Category</string>
+    <string name="browse_title">Browse account</string>
+    <string name="edit_accout_title">Edit transaction</string>
+    <string name="insert_account_title">Insert transaction</string>
 
 </resources>

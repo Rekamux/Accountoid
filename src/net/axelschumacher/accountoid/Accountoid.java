@@ -22,6 +22,9 @@ public class Accountoid {
      */
     public static final String BASE_CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd.net.axelschumacher.accountoid";
 	
+    /** Intent name of an id */
+    public static final String INTENT_ID_NAME = "ID";
+    
 	// This class cannot be instantiated
 	private Accountoid() {
 	}
@@ -153,7 +156,7 @@ public class Accountoid {
 		 * Type: FLOAT
 		 * </P>
 		 */
-		public static final String AMMOUNT = "spending";
+		public static final String AMOUNT = "spending";
 
 		/**
 		 * The spending Category ID

@@ -9,6 +9,7 @@ import android.app.Dialog;
 import android.app.ListActivity;
 import android.content.ContentValues;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.DialogInterface.OnClickListener;
 import android.database.Cursor;
 import android.graphics.Color;
@@ -29,11 +30,20 @@ public class BrowseActivity extends ListActivity {
 	/** Debug TAG */
 	private static final String TAG = "BrowseActivity";
     
-	/** DB handler */
-	private AccountoidDataBase db;
+	/** Model */
+	private Model model;
 	
 	/** List adapter */
 	private SimpleCursorAdapter adapter;
+    
+	/** Menu buttons indexes */
+    public static final int MENU_ITEM_INSERT = 1;
+    public static final int MENU_ITEM_DELETE = 2;
+    public static final int MENU_ITEM_DELETE_ALL = 3;
+    public static final int MENU_ITEM_EDIT = 4;
+    
+    /** Dialogs indexes */
+    public static final int DIALOG_DELETE_ALL = 1;
     
     /** Called when the activity is first created. */
     @Override
@@ -42,16 +52,17 @@ public class BrowseActivity extends ListActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.browse);
         
-        db = new AccountoidDataBase(this);
+        setTitle(R.string.browse_title);
+        
+        model = new Model(this);
 
         // Inform the list we provide context menus for items
         getListView().setOnCreateContextMenuListener(this);
         
-        
-        Cursor cursor = db.getAccountList();
+        Cursor cursor = model.getDataBase().getAccountList();
         adapter = new SimpleCursorAdapter(
         		this, R.layout.browse_cols, cursor, 
-        		new String[]{Account.AMMOUNT},
+        		new String[]{Account.AMOUNT},
         		new int[]{R.id.browse_cols_text1});
         
         // To have a personalized render
@@ -60,10 +71,10 @@ public class BrowseActivity extends ListActivity {
             @Override
             public boolean setViewValue(View view, Cursor cursor, int column) {
                     TextView tv = (TextView) view;
-                    float ammount = cursor.getFloat(cursor.getColumnIndex(Account.AMMOUNT));
+                    float amount = cursor.getFloat(cursor.getColumnIndex(Account.AMOUNT));
                     String description = cursor.getString(cursor.getColumnIndex(Account.DESCRIPTION));
-                    tv.setText(ammount+" ("+description+")");
-                    if (ammount <= 0.0)
+                    tv.setText(model.getDecimalFormat().format(amount)+" ("+description+")"); // TODO localize
+                    if (amount <= 0.0)
                     	tv.setTextColor(Color.RED);
                     else
                     	tv.setTextColor(Color.GREEN);
@@ -72,12 +83,6 @@ public class BrowseActivity extends ListActivity {
         });
         setListAdapter(adapter);
     }
-    
-    public static final int MENU_ITEM_INSERT = 1;
-    public static final int MENU_ITEM_DELETE = 2;
-    public static final int MENU_ITEM_DELETE_ALL = 3;
-    
-    public static final int DIALOG_DELETE_ALL = 1;
     
     @Override
     protected Dialog onCreateDialog(int id) {
@@ -140,22 +145,23 @@ public class BrowseActivity extends ListActivity {
     public void addAmmount(View v)
     {
     	Log.d(TAG, "Add ammount");
-		ContentValues value = new ContentValues();
-		value.put(Account.DESCRIPTION, "BLAH");
-		Random r = new Random();
-		value.put(Account.AMMOUNT, (r.nextFloat()-0.5)*100.0);
-		db.insertAccount(value);
+//		ContentValues value = new ContentValues();
+//		value.put(Account.DESCRIPTION, "BLAH");
+//		Random r = new Random();
+//		value.put(Account.AMOUNT, (r.nextFloat()-0.5)*100.0);
+//		model.getDataBase().insertAccount(value);
 		// Update view
-		adapter.changeCursor(db.getAccountList());
+    	// If I used a provider, it would have been done automatically
+//		adapter.changeCursor(model.getDataBase().getAccountList());
+    	startActivity(new Intent(Intent.ACTION_INSERT, null, this, EditTransactionActivity.class));
     }
     
     public void removeAmmount(long id)
     {
     	Log.d(TAG, "Remove ammount "+id);
-        db.deleteAccount(id);
+    	model.getDataBase().deleteAccount(id);
 		// Update view
-    	// If I used a provider, it would have been done automatically
-		adapter.changeCursor(db.getAccountList());
+		adapter.changeCursor(model.getDataBase().getAccountList());
     }
     
     public void askRemoveAllAccounts()
@@ -166,9 +172,9 @@ public class BrowseActivity extends ListActivity {
     public void removeAllAccounts()
     {
     	Log.d(TAG, "Remove all ammounts");
-        db.deleteAllAccounts();
+    	model.getDataBase().deleteAllAccounts();
 		// Update view
-		adapter.changeCursor(db.getAccountList());
+		adapter.changeCursor(model.getDataBase().getAccountList());
     }
 
     @Override
@@ -212,8 +218,6 @@ public class BrowseActivity extends ListActivity {
         }
         return false;
     }
-    
-    
     
     @Override
     protected void onListItemClick(ListView l, View v, int position, long id) {
