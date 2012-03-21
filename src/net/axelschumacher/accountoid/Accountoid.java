@@ -39,7 +39,7 @@ public class Accountoid {
 		CARD
 	}
 	
-	public static final States DEFAULT_STATE = States.CASH;
+	public static final States DEFAULT_STATE = States.CARD;
 	
 	/**
 	 * Categories table
@@ -73,6 +73,11 @@ public class Accountoid {
 		 * </P>
 		 */
 		public static final String NAME = "name";
+
+		/**
+		 * The default sort order for this table
+		 */
+		public static final String DEFAULT_SORT_ORDER = _ID + " DESC";
 	}
 	
 	/**
@@ -115,6 +120,11 @@ public class Accountoid {
 		 * </P>
 		 */
 		public static final String VALUE = "value";
+
+		/**
+		 * The default sort order for this table
+		 */
+		public static final String DEFAULT_SORT_ORDER = _ID + " DESC";
 	}
 
 	/**

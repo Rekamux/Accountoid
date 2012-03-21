@@ -18,5 +18,11 @@
     <string name="browse_title">Browse account</string>
     <string name="edit_accout_title">Edit transaction</string>
     <string name="insert_account_title">Insert transaction</string>
+    <string-array name="states">
+        <item >Future Cash</item>
+        <item >Future Card</item>
+        <item >Cash</item>
+        <item >Card</item>
+    </string-array>
 
 </resources>

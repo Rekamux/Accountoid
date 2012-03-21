@@ -87,11 +87,10 @@ public class AccountoidDataBase {
         SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
         qb.setTables(ACCOUNT_TABLE_NAME);
 
-        String orderBy = Accountoid.Account.DEFAULT_SORT_ORDER;
+        String orderBy = Account.DEFAULT_SORT_ORDER;
         
         String projection[] = {Account._ID, Account.AMOUNT, Account.DESCRIPTION};
         
-        // Get the database and run the query
         SQLiteDatabase db = openHelper.getReadableDatabase();
         Cursor c = qb.query(db, projection, null, null, null, null, orderBy);
         
@@ -102,7 +101,7 @@ public class AccountoidDataBase {
         SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
         qb.setTables(ACCOUNT_TABLE_NAME);
 
-        String orderBy = Accountoid.Account.DEFAULT_SORT_ORDER;
+        String orderBy = Account.DEFAULT_SORT_ORDER;
         
         String where = Account._ID+" = "+id;
         
@@ -147,7 +146,7 @@ public class AccountoidDataBase {
         if (!values.containsKey(Account.DESCRIPTION))
         	throw new IllegalArgumentException("A description must be specified");
         if (!values.containsKey(Account.AMOUNT))
-        	throw new IllegalArgumentException("A ammount must be specified");
+        	throw new IllegalArgumentException("An amount must be specified");
         if (!values.containsKey(Account.STATE))
         	values.put(Account.STATE, Accountoid.DEFAULT_STATE.ordinal());
 
@@ -169,4 +168,63 @@ public class AccountoidDataBase {
         return count == 1;
     }
 
+    /**
+     * Return all categories
+     * @return all categories
+     */
+	public Cursor getCategories() {
+        SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
+        qb.setTables(CATEGORIES_TABLE_NAME);
+
+        String orderBy = Categories.DEFAULT_SORT_ORDER;
+        
+        String projection[] = {Categories._ID, Categories.NAME};
+        
+        SQLiteDatabase db = openHelper.getReadableDatabase();
+        Cursor c = qb.query(db, projection, null, null, null, null, orderBy);
+        
+        return c;
+	}
+
+	/**
+	 * Return all currencies
+	 * @return all currencies
+	 */
+	public Cursor getCurrencies() {
+        SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
+        qb.setTables(CURRENCIES_TABLE_NAME);
+
+        String orderBy = Currencies.DEFAULT_SORT_ORDER;
+        
+        String projection[] = {Currencies._ID, Currencies.CODE};
+        
+        SQLiteDatabase db = openHelper.getReadableDatabase();
+        Cursor c = qb.query(db, projection, null, null, null, null, orderBy);
+        
+        return c;
+	}
+
+	public Uri insertCategory(ContentValues initialValues) {// Values to be inserted
+        ContentValues values;
+        if (initialValues != null)
+            values = new ContentValues(initialValues);
+        else
+            values = new ContentValues();
+        
+        
+        // Make sure that the fields are all set
+        if (!values.containsKey(Categories.NAME))
+        	throw new IllegalArgumentException("A name must be specified");
+
+        Log.v(TAG, "Inserting category("+values.getAsString(Categories.NAME)+")");
+        
+        SQLiteDatabase db = openHelper.getWritableDatabase();
+        long rowId = db.insert(CATEGORIES_TABLE_NAME, null, values);
+        if (rowId > 0) {
+            Uri noteUri = ContentUris.withAppendedId(Categories.CONTENT_URI, rowId);
+            return noteUri;
+        }
+        
+        throw new SQLException("Failed to insert row into " + CATEGORIES_TABLE_NAME);
+	}
 }
