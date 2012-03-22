@@ -1,8 +1,12 @@
 This application should allow users to easily handle their accounts, including cash flows and predicted spending and incomes.
 
-Here are some features I would like to implement:
+Here are some features I would like to implement this week:
 
 - Use SQLite to store data
+- Fetch currencies values
+
+Here are the features for later:
+
 - Enter and edit data monthly
 - Support multi-currencies
 - Tricount offline
