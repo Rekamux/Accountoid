@@ -36,5 +36,12 @@
     <string name="dialog_create_currency">Create currency</string>
     <string name="dialog_complain_category_message">You will create your first category</string>
     <string name="dialog_create_category">Create category</string>
+    <string name="currency_add_button">Add</string>
+    <string name="currency_add_text">Code</string>
+    <string name="currency_title">Currencies</string>
+    <string name="dialog_cannot_find_currency">This currency cannot be found !</string>
+    <string name="dialog_last_currency">You cannot delete the last currency !</string>
+    <string name="currency_delete">Delete this currency</string>
+    <string name="dialog_currency_already_exists">This currency already exists !</string>
 
 </resources>

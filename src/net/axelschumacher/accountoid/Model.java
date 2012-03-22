@@ -4,12 +4,12 @@ import java.text.DecimalFormat;
 import java.util.Currency;
 
 import android.content.Context;
-import android.util.Log;
 
 /**
  * Model knowing the real stuffs
  */
 public class Model {
+	@SuppressWarnings("unused")
 	private static final String TAG = "Model"; 
 
 	/**
@@ -34,7 +34,6 @@ public class Model {
 			for (int i = 0; i < f; i++)
 				format = format.concat("#");
 			lastFraction = f;
-			setDecimalSeparatorAlwaysShown(f > 0);
 			return this;
 		}
 
@@ -54,7 +53,6 @@ public class Model {
 	}
 
 	public DecimalFormat getDecimalFormat(Currency c) {
-		Log.d(TAG, "getDecimalFormat currency="+c);
 		if (c != null) {
 			int fraction = c.getDefaultFractionDigits();
 			df.setFraction(fraction);

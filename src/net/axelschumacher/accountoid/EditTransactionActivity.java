@@ -3,7 +3,6 @@ package net.axelschumacher.accountoid;
 import java.text.DecimalFormat;
 import java.util.Calendar;
 import java.util.Currency;
-import java.util.Date;
 
 import net.axelschumacher.accountoid.Accountoid.Account;
 import net.axelschumacher.accountoid.Accountoid.Categories;
@@ -77,7 +76,23 @@ public class EditTransactionActivity extends Activity {
 	/** Currency selected index */
 	private int selectedCurrency;
 
-	// TODO handle savedInstanceState
+	/** Init timestamp */
+	long initTimestamp;
+
+	/** Init amount */
+	float initAmount;
+
+	/** Init description */
+	String initDescription;
+
+	/** Init currency id */
+	long initCurrency;
+
+	/** Init category id */
+	long initCategory;
+
+	/** Init state id */
+	long initState;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -100,12 +115,7 @@ public class EditTransactionActivity extends Activity {
 		if (Intent.ACTION_EDIT.equals(action)) {
 			state = STATE_EDIT;
 			long id = intent.getLongExtra(Accountoid.INTENT_ID_NAME, 0);
-			cursorAccount = model.getDataBase().getAccount(id);
-			if (cursorAccount.getCount() != 1) {
-				Log.e(TAG, "Given ID not acceptable");
-				finish();
-				return;
-			}
+			initFields(id);
 
 		} else if (Intent.ACTION_INSERT.equals(action)) {
 			state = STATE_INSERT;
@@ -119,7 +129,7 @@ public class EditTransactionActivity extends Activity {
 		// Setting the layout
 		setContentView(R.layout.transaction_editor);
 
-		// Getting the inputs
+		// Amount input
 		amountEditText = (EditText) findViewById(R.id.amount_field_edit);
 		// Format the input
 		amountEditText.setOnFocusChangeListener(new OnFocusChangeListener() {
@@ -134,53 +144,30 @@ public class EditTransactionActivity extends Activity {
 			}
 		});
 
+		// Description input
 		descriptionEditText = (EditText) findViewById(R.id.description_field_edit);
 
+		// Date input
 		dateDatePicker = (DatePicker) findViewById(R.id.date_field_edit);
-		int year, monthOfYear, dayOfMonth;
-		// If we create a new transaction, now will be used
-		if (state == STATE_INSERT) {
-			Calendar c = Calendar.getInstance();
-			year = c.get(Calendar.YEAR);
-			monthOfYear = c.get(Calendar.MONTH);
-			dayOfMonth = c.get(Calendar.DAY_OF_MONTH);
-		} else {
-			Date date = new Date(cursorAccount.getLong(cursorAccount
-					.getColumnIndex(Account.DATE)));
-			year = date.getYear();
-			monthOfYear = date.getMonth();
-			dayOfMonth = date.getDay();
-		}
-		dateDatePicker.updateDate(year, monthOfYear, dayOfMonth);
+		initDate();
 
+		// Category input
 		categorySpinner = (Spinner) findViewById(R.id.category_field_edit);
-		startManagingCursor(cursorCategory);
-		String[] columns = new String[] { Categories.NAME };
-		int[] to = new int[] { android.R.id.text1 };
-		SimpleCursorAdapter categoryAdapter = new SimpleCursorAdapter(this,
-				android.R.layout.simple_spinner_dropdown_item, cursorCategory,
-				columns, to);
-		categorySpinner.setAdapter(categoryAdapter);
-		categorySpinner.setOnItemSelectedListener(new OnItemSelectedListener() {
-			public void onItemSelected(AdapterView<?> parent, View view,
-					int pos, long id) {
-				Cursor c = (Cursor) parent.getItemAtPosition(pos);
-				selectedCategory = c.getInt(c
-						.getColumnIndexOrThrow(Currencies._ID));
-			}
+		initCategory();
 
-			public void onNothingSelected(AdapterView<?> parent) {
-			}
-		});
-
+		// State input
 		stateSpinner = (Spinner) findViewById(R.id.state_field_edit);
-		ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
-				this, R.array.states, android.R.layout.simple_spinner_item);
-		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-		stateSpinner.setAdapter(adapter);
-		stateSpinner.setSelection(Accountoid.DEFAULT_STATE.ordinal());
+		initState();
 
+		// Currency input
 		currencySpinner = (Spinner) findViewById(R.id.currency_field_edit);
+		initCurrency();
+	}
+
+	/**
+	 * Init the state
+	 */
+	private void initCurrency() {
 		startManagingCursor(cursorCurrency);
 		SimpleCursorAdapter currencyAdapter = new SimpleCursorAdapter(this,
 				android.R.layout.simple_spinner_dropdown_item, cursorCurrency,
@@ -208,6 +195,121 @@ public class EditTransactionActivity extends Activity {
 			public void onNothingSelected(AdapterView<?> parent) {
 			}
 		});
+
+		// init when editing
+		if (state == STATE_EDIT) {
+			int positionToSelect = 0;
+			for (int i=0; i<currencyAdapter.getCount(); i++)
+			{
+				Cursor c = (Cursor)(currencyAdapter.getItem(i));
+				
+			Log.d(TAG, "id: "+currencyAdapter.getItemId(i)+" object: "+c.getLong(c.getColumnIndex(Currencies._ID)));
+			//TODO
+			}
+			categorySpinner.setSelection(positionToSelect);
+		}
+	}
+
+	/**
+	 * Init the state
+	 */
+	private void initState() {
+		// Prepare list
+		ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
+				this, R.array.states, android.R.layout.simple_spinner_item);
+		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+		stateSpinner.setAdapter(adapter);
+		stateSpinner.setSelection(Accountoid.DEFAULT_STATE.ordinal());
+
+		// init when editing
+		if (state == STATE_EDIT) {
+			stateSpinner.setSelection((int) initState);
+		}
+	}
+
+	private void initCategory() {
+		// Prepare list
+		startManagingCursor(cursorCategory);
+		String[] columns = new String[] { Categories.NAME };
+		int[] to = new int[] { android.R.id.text1 };
+		SimpleCursorAdapter categoryAdapter = new SimpleCursorAdapter(this,
+				android.R.layout.simple_spinner_dropdown_item, cursorCategory,
+				columns, to);
+		categorySpinner.setAdapter(categoryAdapter);
+		// Get selected category ID
+		categorySpinner.setOnItemSelectedListener(new OnItemSelectedListener() {
+			public void onItemSelected(AdapterView<?> parent, View view,
+					int pos, long id) {
+				Cursor c = (Cursor) parent.getItemAtPosition(pos);
+				selectedCategory = c.getInt(c
+						.getColumnIndexOrThrow(Categories._ID));
+			}
+
+			public void onNothingSelected(AdapterView<?> parent) {
+				Log.d(TAG, "initCategory: nothing selected");
+			}
+		});
+
+		// init when editing
+		if (state == STATE_EDIT) {
+			int positionToSelect = 0;
+			for (int i=0; i<categoryAdapter.getCount(); i++)
+			{
+			Log.d(TAG, "id: "+categoryAdapter.getItemId(i)+" object: "+categoryAdapter.getItem(i));
+			//TODO
+			}
+			categorySpinner.setSelection(positionToSelect);
+		}
+	}
+
+	/**
+	 * Fill all the insert fields
+	 * 
+	 * @param id
+	 *            entry id
+	 */
+	private void initFields(long id) {
+		cursorAccount = model.getDataBase().getAccount(id);
+		if (cursorAccount.getCount() != 1) {
+			Log.e(TAG, "Given ID not acceptable");
+			finish();
+			return;
+		}
+
+		cursorAccount.moveToFirst();
+		initTimestamp = cursorAccount.getLong(cursorAccount
+				.getColumnIndex(Account.DATE));
+		initAmount = cursorAccount.getFloat(cursorAccount
+				.getColumnIndex(Account.AMOUNT));
+		initDescription = cursorAccount.getString(cursorAccount
+				.getColumnIndex(Account.DESCRIPTION));
+		initCategory = cursorAccount.getLong(cursorAccount
+				.getColumnIndex(Account.CATEGORY));
+		initCurrency = cursorAccount.getLong(cursorAccount
+				.getColumnIndex(Account.CURRENCY));
+		initState = cursorAccount.getLong(cursorAccount
+				.getColumnIndex(Account.STATE));
+	}
+
+	/**
+	 * Set a value to the date picker
+	 */
+	private void initDate() {
+		int year, monthOfYear, dayOfMonth;
+		// If we create a new transaction, now will be used
+		if (state == STATE_EDIT) {
+			Calendar calendar = Calendar.getInstance();
+			calendar.setTimeInMillis(initTimestamp * 1000L);
+			year = calendar.get(Calendar.YEAR);
+			monthOfYear = calendar.get(Calendar.MONTH);
+			dayOfMonth = calendar.get(Calendar.DAY_OF_MONTH);
+			dateDatePicker.updateDate(year, monthOfYear, dayOfMonth);
+		} else if (state == STATE_INSERT) {
+			Calendar c = Calendar.getInstance();
+			year = c.get(Calendar.YEAR);
+			monthOfYear = c.get(Calendar.MONTH);
+			dayOfMonth = c.get(Calendar.DAY_OF_MONTH);
+		}
 	}
 
 	/**
@@ -222,6 +324,13 @@ public class EditTransactionActivity extends Activity {
 		((SimpleCursorAdapter) categorySpinner.getAdapter()).changeCursor(model
 				.getDataBase().getCategories());
 	}
+	
+	@Override
+	protected void onResume() {
+		super.onResume();
+		((SimpleCursorAdapter) currencySpinner.getAdapter()).changeCursor(model
+				.getDataBase().getCurrencies());
+	}
 
 	/**
 	 * Add a currency
@@ -229,11 +338,7 @@ public class EditTransactionActivity extends Activity {
 	 * @param v
 	 */
 	public void addCurrency(View v) {
-		ContentValues value = new ContentValues();
-		value.put(Currencies.CODE, "EUR");
-		model.getDataBase().insertCurrency(value);
-		((SimpleCursorAdapter) currencySpinner.getAdapter()).changeCursor(model
-				.getDataBase().getCurrencies());
+		startActivity(new Intent(this, EditCurrenciesActivity.class));
 	}
 
 	/**
@@ -275,6 +380,8 @@ public class EditTransactionActivity extends Activity {
 
 		// Parse description and ask for it not to be empty
 		String description = descriptionEditText.getEditableText().toString();
+		// Remove trailing spaces
+		description = description.replaceAll("\\s+$", "");
 		if (description.isEmpty()) {
 			showDialog(DIALOG_COMPLAIN_DESCRIPTION);
 			return;
@@ -288,8 +395,7 @@ public class EditTransactionActivity extends Activity {
 			addCurrency(null);
 			return;
 		}
-		long currency = currencySpinner.getSelectedItemId();
-		value.put(Account.CURRENCY, currency);
+		value.put(Account.CURRENCY, selectedCurrency);
 
 		// If no category selected, user will create at least one
 		Object categoryObject = categorySpinner.getSelectedItem();
@@ -298,12 +404,20 @@ public class EditTransactionActivity extends Activity {
 			addCategory(null);
 			return;
 		}
-		long category = categorySpinner.getSelectedItemId();
-		value.put(Account.CATEGORY, category);
+		value.put(Account.CATEGORY, selectedCategory);
 
 		// Handle state choice
 		long state = stateSpinner.getSelectedItemId();
 		value.put(Account.STATE, state);
+
+		// Handle date choice
+		Calendar c = Calendar.getInstance();
+		c.set(Calendar.YEAR, dateDatePicker.getYear());
+		c.set(Calendar.MONTH, dateDatePicker.getMonth());
+		c.set(Calendar.DAY_OF_MONTH, dateDatePicker.getDayOfMonth());
+		c.set(Calendar.HOUR, 12);
+		long date = c.getTimeInMillis() / 1000L;
+		value.put(Account.DATE, date);
 
 		model.getDataBase().insertAccount(value);
 		returnBrowsing();

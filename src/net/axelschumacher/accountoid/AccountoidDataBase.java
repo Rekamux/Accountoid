@@ -12,6 +12,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.SQLException;
+import android.database.sqlite.SQLiteConstraintException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteQueryBuilder;
@@ -57,11 +58,11 @@ public class AccountoidDataBase {
 					+ ");");
 			db.execSQL("CREATE TABLE " + CATEGORIES_TABLE_NAME + " ("
 					+ Categories._ID + " INTEGER PRIMARY KEY,"
-					+ Categories.NAME + " TEXT"
+					+ Categories.NAME + " TEXT UNIQUE"
 					+ ");");
 			db.execSQL("CREATE TABLE " + CURRENCIES_TABLE_NAME + " ("
 					+ Currencies._ID + " INTEGER PRIMARY KEY,"
-					+ Currencies.CODE + " TEXT,"
+					+ Currencies.CODE + " TEXT UNIQUE,"
 					+ Currencies.VALUE + " FLOAT"
 					+ ");");
 			
@@ -97,7 +98,7 @@ public class AccountoidDataBase {
 
         String orderBy = Account.DEFAULT_SORT_ORDER;
         
-        String projection[] = {Account._ID, Account.AMOUNT, Account.DESCRIPTION};
+        String projection[] = {Account._ID, Account.AMOUNT, Account.DESCRIPTION, Account.CURRENCY};
         
         SQLiteDatabase db = openHelper.getReadableDatabase();
         Cursor c = qb.query(db, projection, null, null, null, null, orderBy);
@@ -236,13 +237,19 @@ public class AccountoidDataBase {
         throw new SQLException("Failed to insert row into " + CATEGORIES_TABLE_NAME);
 	}
 
-	public Uri insertCurrency(ContentValues initialValues) {
+	/**
+	 * Insert a currency
+	 * @throws IllegalArgumentException if {@link Currencies}.CODE field is not defined
+	 * @throws SQLException if entry already exists
+	 * @param initialValues
+	 * @return the Uri
+	 */
+	public Uri insertCurrency(ContentValues initialValues) throws SQLiteConstraintException, IllegalArgumentException{
         ContentValues values;
         if (initialValues != null)
             values = new ContentValues(initialValues);
         else
             values = new ContentValues();
-        
         
         // Make sure that the fields are all set
         if (!values.containsKey(Currencies.CODE))
@@ -254,13 +261,15 @@ public class AccountoidDataBase {
         Log.v(TAG, "Inserting currency("+Currency.getInstance(code)+")");
         
         SQLiteDatabase db = openHelper.getWritableDatabase();
-        long rowId = db.insert(CURRENCIES_TABLE_NAME, null, values);
+        long rowId;
+        // How can I fore the printStackTrace if constraint error ? TODO
+		rowId = db.insert(CURRENCIES_TABLE_NAME, null, values);
         if (rowId > 0) {
             Uri curUri = ContentUris.withAppendedId(Currencies.CONTENT_URI, rowId);
             return curUri;
         }
         
-        throw new SQLException("Failed to insert row into " + CURRENCIES_TABLE_NAME);
+        throw new SQLiteConstraintException("Failed to insert row into " + CURRENCIES_TABLE_NAME);
 		
 	}
 
@@ -306,5 +315,17 @@ public class AccountoidDataBase {
 	public Currency getCurrencyFromIndex(long l)
 	{
         return Currency.getInstance(getCurrencyCodeFromIndex(l));
+	}
+
+	/**
+	 * Delete the given currency
+	 * @param id
+	 */
+	public boolean deleteCurrency(long id) {
+		 SQLiteDatabase db = openHelper.getWritableDatabase();
+		 int count;
+		 count = db.delete(CURRENCIES_TABLE_NAME, Account._ID + "=" + id, null);
+		 
+		 return count == 1;
 	}
 }

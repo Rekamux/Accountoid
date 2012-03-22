@@ -25,7 +25,6 @@ import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 
 public class BrowseActivity extends ListActivity {
-
 	/** Debug TAG */
 	private static final String TAG = "BrowseActivity";
 
@@ -44,7 +43,6 @@ public class BrowseActivity extends ListActivity {
 	/** Dialogs indexes */
 	public static final int DIALOG_DELETE_ALL = 1;
 
-	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -71,7 +69,10 @@ public class BrowseActivity extends ListActivity {
 						.getColumnIndex(Account.AMOUNT));
 				String description = cursor.getString(cursor
 						.getColumnIndex(Account.DESCRIPTION));
-				String currencyCode = model.getDataBase().getCurrencyCodeFromIndex(cursor.getInt(cursor.getColumnIndex(Account.CURRENCY)));
+				int currencyCol = cursor.getColumnIndex(Account.CURRENCY);
+				int currencyId = cursor.getInt(currencyCol);
+				Log.d(TAG, "For entry with currency "+currencyId);
+				String currencyCode = model.getDataBase().getCurrencyCodeFromIndex(currencyId);
 				Currency currency = Currency.getInstance(currencyCode);
 				tv.setText(model.getDecimalFormat(currency).format(amount) + currency.getSymbol()+ 	" ("
 						+ description + ")");
@@ -194,7 +195,7 @@ public class BrowseActivity extends ListActivity {
 		menu.setHeaderTitle(cursor.getString(cursor
 				.getColumnIndex(Account.DESCRIPTION)));
 
-		// Add a menu item to delete the note
+		// Add a menu item to delete the transaction
 		menu.add(0, MENU_ITEM_DELETE, 0, R.string.browse_delete);
 	}
 
@@ -220,5 +221,9 @@ public class BrowseActivity extends ListActivity {
 	@Override
 	protected void onListItemClick(ListView l, View v, int position, long id) {
 		Log.v(TAG, "id " + id + " clicked");
+		Intent intent = new Intent(Intent.ACTION_EDIT, null, this,
+				EditTransactionActivity.class);
+		intent.putExtra(Accountoid.INTENT_ID_NAME, id);
+		startActivity(intent);
 	}
 }
