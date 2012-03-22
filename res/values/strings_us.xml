@@ -15,7 +15,7 @@
     <string name="currency_field">Currency</string>
     <string name="state_field">Transaction State</string>
     <string name="category_field">Category</string>
-    <string name="browse_title">Browse account</string>
+    <string name="browse_title">Browse transactions</string>
     <string name="edit_accout_title">Edit transaction</string>
     <string name="insert_account_title">Insert transaction</string>
     <string-array name="states">
@@ -47,5 +47,12 @@
     <string name="category_add_button">Add</string>
     <string name="delete_currency_confirm_message"> transaction(s) use(s) this currency ! Do you really want to delete them all ?</string>
     <string name="delete_currency_confirm_title">Transactions are using this currency</string>
+    <string name="category_title">Categories</string>
+    <string name="delete_category_confirm_message">transaction(s) use(s) this category ! Do you really want to delete them all ?</string>
+    <string name="delete_category_confirm_title">Transactions are using this category</string>
+    <string name="dialog_category_already_exists">This category already exists !</string>
+    <string name="category_delete">Delete this category</string>
+    <string name="dialog_empty_category">Categories cannot be empty !</string>
+    <string name="category_done_button">Done</string>
 
 </resources>

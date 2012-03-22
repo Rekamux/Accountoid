@@ -11,12 +11,12 @@ import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteConstraintException;
+import android.database.SQLException;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.ContextMenu;
-import android.view.MenuItem;
 import android.view.ContextMenu.ContextMenuInfo;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.EditText;
@@ -43,6 +43,10 @@ public class EditCurrenciesActivity extends ListActivity {
 	public static final int DIALOG_CANNOT_FIND_CURRENCY = 1;
 	public static final int DIALOG_CURRENCY_ALREADY_EXISTS = 2;
 	public static final int DIALOG_USED_CURRENCY = 3;
+	
+	/** Bundle data */
+	private final static String BUNDLE_BEING_DELETED_ID = "ID";
+	private final static String BUNDLE_ACCOUNTS_COUNT = "COUNT";
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -85,6 +89,8 @@ public class EditCurrenciesActivity extends ListActivity {
 	@Override
 	protected Dialog onCreateDialog(int id, Bundle b) {
 		Log.d(TAG, "onCreateDialog id="+id+" bundle="+b);
+		if (b == null)
+			return onCreateDialog(id);
 		if (id == DIALOG_USED_CURRENCY)
 		{
 			final long beingDeleted = b.getLong(BUNDLE_BEING_DELETED_ID);
@@ -168,9 +174,6 @@ public class EditCurrenciesActivity extends ListActivity {
 		}
 		return false;
 	}
-	
-	private final static String BUNDLE_BEING_DELETED_ID = "ID";
-	private final static String BUNDLE_ACCOUNTS_COUNT = "COUNT";
 
 	/**
 	 * Try to remove given currency
@@ -214,7 +217,7 @@ public class EditCurrenciesActivity extends ListActivity {
 		value.put(Currencies.CODE, code);
 		try {
 			model.getDataBase().insertCurrency(value);
-		} catch (SQLiteConstraintException e) {
+		} catch (SQLException e) {
 			// If the currency already exists
 			Log.d(TAG, "Sorry for the print stack trace, obviously from SQL code");
 			showDialog(DIALOG_CURRENCY_ALREADY_EXISTS);

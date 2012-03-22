@@ -68,6 +68,9 @@ public class EditTransactionActivity extends Activity {
 
 	/** Category selected index */
 	private int selectedCategory = -1;
+	
+	/** Id */
+	private long id = -1;
 
 	/** State input */
 	private Spinner stateSpinner;
@@ -116,8 +119,8 @@ public class EditTransactionActivity extends Activity {
 		final String action = intent.getAction();
 		if (Intent.ACTION_EDIT.equals(action)) {
 			state = STATE_EDIT;
-			long id = intent.getLongExtra(Accountoid.INTENT_ID_NAME, 0);
-			initFields(id);
+			id = intent.getLongExtra(Accountoid.INTENT_ID_NAME, 0);
+			initFields();
 
 		} else if (Intent.ACTION_INSERT.equals(action)) {
 			state = STATE_INSERT;
@@ -208,8 +211,7 @@ public class EditTransactionActivity extends Activity {
 			public void onItemSelected(AdapterView<?> parent, View view,
 					int pos, long id) {
 				Cursor c = (Cursor) parent.getItemAtPosition(pos);
-				selectedCurrency = c.getInt(c
-						.getColumnIndex(Currencies._ID));
+				selectedCurrency = c.getInt(c.getColumnIndex(Currencies._ID));
 			}
 
 			public void onNothingSelected(AdapterView<?> parent) {
@@ -262,8 +264,7 @@ public class EditTransactionActivity extends Activity {
 			public void onItemSelected(AdapterView<?> parent, View view,
 					int pos, long id) {
 				Cursor c = (Cursor) parent.getItemAtPosition(pos);
-				selectedCategory = c.getInt(c
-						.getColumnIndex(Categories._ID));
+				selectedCategory = c.getInt(c.getColumnIndex(Categories._ID));
 			}
 
 			public void onNothingSelected(AdapterView<?> parent) {
@@ -285,11 +286,8 @@ public class EditTransactionActivity extends Activity {
 
 	/**
 	 * Fill all the insert fields
-	 * 
-	 * @param id
-	 *            entry id
 	 */
-	private void initFields(long id) {
+	private void initFields() {
 		cursorAccount = model.getDataBase().getAccount(id);
 		if (cursorAccount.getCount() != 1) {
 			Log.e(TAG, "Given ID not acceptable");
@@ -441,7 +439,12 @@ public class EditTransactionActivity extends Activity {
 		long date = c.getTimeInMillis() / 1000L;
 		value.put(Account.DATE, date);
 
-		model.getDataBase().insertAccount(value);
+		if (this.state == STATE_INSERT)
+			model.getDataBase().insertAccount(value);
+		else
+		{
+			model.getDataBase().updateAccount(id, value);
+		}
 		returnBrowsing();
 	}
 
@@ -464,23 +467,25 @@ public class EditTransactionActivity extends Activity {
 			alert.setMessage(R.string.dialog_complain_amount_message);
 			alert.setPositiveButton(R.string.ok, null);
 			alert.setCancelable(true);
+			amountEditText.requestFocus();
+			findViewById(R.id.transaction_scroll).scrollTo(
+					amountEditText.getScrollX(), amountEditText.getScrollY());
 			break;
 		case DIALOG_COMPLAIN_DESCRIPTION:
 			alert.setTitle(R.string.dialog_error);
 			alert.setMessage(R.string.dialog_complain_description_message);
-			alert.setPositiveButton(R.string.ok, new OnClickListener() {
-				
-				public void onClick(DialogInterface dialog, int which) {
-					addCategory(null);
-				}
-			});
+			alert.setPositiveButton(R.string.ok, null);
 			alert.setCancelable(false);
+			descriptionEditText.requestFocus();
+			findViewById(R.id.transaction_scroll).scrollTo(
+					descriptionEditText.getScrollX(),
+					descriptionEditText.getScrollY());
 			break;
 		case DIALOG_COMPLAIN_CURRENCY:
 			alert.setTitle(R.string.dialog_create_currency);
 			alert.setMessage(R.string.dialog_complain_currency_message);
 			alert.setPositiveButton(R.string.ok, new OnClickListener() {
-				
+
 				public void onClick(DialogInterface dialog, int which) {
 					addCurrency(null);
 				}
@@ -490,7 +495,12 @@ public class EditTransactionActivity extends Activity {
 		case DIALOG_COMPLAIN_CATEGORY:
 			alert.setTitle(R.string.dialog_create_category);
 			alert.setMessage(R.string.dialog_complain_category_message);
-			alert.setPositiveButton(R.string.ok, null);
+			alert.setPositiveButton(R.string.ok, new OnClickListener() {
+
+				public void onClick(DialogInterface dialog, int which) {
+					addCategory(null);
+				}
+			});
 			alert.setCancelable(true);
 			break;
 

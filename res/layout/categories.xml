@@ -1,51 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="wrap_content"
-    android:orientation="vertical" >
+	android:layout_width="fill_parent" android:layout_height="wrap_content"
+	android:orientation="vertical">
 
-    <TextView
-        android:id="@+id/currency_add_text"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:gravity="center_horizontal"
-        android:text="@string/category_add_text"
-        android:textAppearance="?android:attr/textAppearanceLarge" />
+	<TextView android:id="@+id/currency_add_text"
+		android:layout_width="fill_parent" android:layout_height="wrap_content"
+		android:layout_weight="1" android:gravity="center_horizontal"
+		android:text="@string/category_add_text" android:textAppearance="?android:attr/textAppearanceLarge" />
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:baselineAligned="true" >
 
-        <EditText
-            android:id="@+id/category_edit"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_gravity="center"
-            android:inputType="text" >
+	<EditText android:id="@+id/category_edit"
+		android:layout_width="match_parent" android:layout_height="match_parent"
+		android:layout_gravity="center" android:inputType="text">
 
-            <requestFocus />
-        </EditText>
+		<requestFocus></requestFocus>
+	</EditText>
 
-        <Button
-            xmlns:android="http://schemas.android.com/apk/res/android"
-            android:id="@+id/category_add_button"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="right"
-            android:onClick="addCurrency"
-            android:text="@string/category_add_button" />
-    </LinearLayout>
+	<Button xmlns:android="http://schemas.android.com/apk/res/android"
+		android:id="@+id/category_add_button" android:layout_width="fill_parent"
+		android:layout_height="wrap_content" android:layout_gravity="right"
+		android:onClick="addCategory" android:text="@string/category_add_button" />
 
-    <ListView
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        android:id="@android:id/list"
-        android:layout_width="match_parent"
-        android:layout_height="fill_parent"
-        android:paddingLeft="5dip"
-        android:singleLine="true"
-        android:textAppearance="?android:attr/textAppearanceLarge" >
-    </ListView>
+	<ListView xmlns:android="http://schemas.android.com/apk/res/android"
+		android:id="@android:id/list" android:layout_width="match_parent"
+		android:layout_height="fill_parent" android:paddingLeft="5dip"
+		android:singleLine="true" android:textAppearance="?android:attr/textAppearanceLarge">
+	</ListView>
+
+	<Button xmlns:android="http://schemas.android.com/apk/res/android"
+		android:id="@+id/category_done_button" android:layout_width="fill_parent"
+		android:layout_height="wrap_content" android:layout_gravity="right"
+		android:onClick="goBack" android:text="@string/category_done_button" />
 
 </LinearLayout>

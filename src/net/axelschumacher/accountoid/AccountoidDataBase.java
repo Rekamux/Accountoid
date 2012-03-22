@@ -144,9 +144,9 @@ public class AccountoidDataBase {
         
         // Make sure that the fields are all set
         if (!values.containsKey(Account.CATEGORY))
-        	values.put(Account.CATEGORY, 0); // TODO
+        	throw new IllegalArgumentException("A category must be specified");
         if (!values.containsKey(Account.CURRENCY))
-        	values.put(Account.CURRENCY, 0); // TODO
+        	throw new IllegalArgumentException("A currency must be specified");
         if (!values.containsKey(Account.DATE))
         	values.put(Account.DATE, now);
         if (!values.containsKey(Account.DESCRIPTION))
@@ -166,7 +166,7 @@ public class AccountoidDataBase {
         throw new SQLException("Failed to insert row into " + ACCOUNT_TABLE_NAME);
 	}
 
-    public boolean updateAccount(int id, ContentValues values) {
+    public boolean updateAccount(long id, ContentValues values) {
         SQLiteDatabase db = openHelper.getWritableDatabase();
         int count;
         count = db.update(ACCOUNT_TABLE_NAME, values, Account._ID +"="+id, null);
@@ -326,6 +326,18 @@ public class AccountoidDataBase {
 		 
 		 return count == 1;
 	}
+
+	/**
+	 * Delete the given category
+	 * @param id
+	 */
+	public boolean deleteCategory(long id) {
+		 SQLiteDatabase db = openHelper.getWritableDatabase();
+		 int count;
+		 count = db.delete(CATEGORIES_TABLE_NAME, Account._ID + "=" + id, null);
+		 
+		 return count == 1;
+	}
 	
 	/**
 	 * Delete all account using given currency id
@@ -334,6 +346,17 @@ public class AccountoidDataBase {
 	public void deleteAccountUsingCurrency(long id)
 	{
         String where = Account.CURRENCY+"="+id;
+        
+        SQLiteDatabase db = openHelper.getReadableDatabase();
+        db.delete(ACCOUNT_TABLE_NAME, where, null);
+	}
+	
+	/**
+	 * Delete all account using given category id
+	 * @param id
+	 */
+	public void deleteAccountUsingCategory(long id) {
+        String where = Account.CATEGORY+"="+id;
         
         SQLiteDatabase db = openHelper.getReadableDatabase();
         db.delete(ACCOUNT_TABLE_NAME, where, null);
@@ -350,6 +373,24 @@ public class AccountoidDataBase {
         
         String projection[] = {Account._ID};
         String where = Account.CURRENCY+"="+id;
+        
+        SQLiteDatabase db = openHelper.getReadableDatabase();
+        Cursor c = qb.query(db, projection, where, null, null, null, null);
+        
+        return c.getCount();
+	}
+
+	/**
+	 * Return true if at least one transaction uses given category id
+	 * @param id
+	 * @return
+	 */
+	public int getAccountsWithCategory(long id) {
+        SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
+        qb.setTables(ACCOUNT_TABLE_NAME);
+        
+        String projection[] = {Account._ID};
+        String where = Account.CATEGORY+"="+id;
         
         SQLiteDatabase db = openHelper.getReadableDatabase();
         Cursor c = qb.query(db, projection, where, null, null, null, null);
