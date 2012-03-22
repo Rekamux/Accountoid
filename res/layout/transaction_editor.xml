@@ -7,7 +7,7 @@
     <LinearLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
+        android:layout_height="wrap_content"
         android:orientation="vertical" >
 
         <TextView
@@ -58,10 +58,30 @@
             android:text="@string/category_field"
             android:textAppearance="?android:attr/textAppearanceLarge" />
 
-        <Spinner
-            android:id="@+id/category_field_edit"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+        <LinearLayout
+            xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal" >
+
+            <Spinner
+                android:id="@+id/category_field_edit"
+                android:layout_width="wrap_content"
+                android:layout_height="fill_parent"
+                android:layout_weight="1"
+                android:gravity="center_horizontal" />
+
+            <ImageButton
+                android:id="@+id/add_category_button"
+                android:layout_width="0dip"
+                android:layout_height="fill_parent"
+                android:layout_weight="0.3"
+                android:contentDescription="@string/add_category"
+                android:gravity="center_horizontal"
+                android:src="@drawable/ic_menu_plus"
+                android:onClick="addCategory" >
+            </ImageButton>
+        </LinearLayout>
 
         <TextView
             android:id="@+id/currency_field_text"
@@ -70,10 +90,29 @@
             android:text="@string/currency_field"
             android:textAppearance="?android:attr/textAppearanceLarge" />
 
-        <Spinner
-            android:id="@+id/currency_field_edit"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+        <LinearLayout
+            xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal" >
+
+            <Spinner
+                android:id="@+id/currency_field_edit"
+                android:layout_width="wrap_content"
+                android:layout_height="fill_parent"
+                android:layout_weight="1" />
+
+            <ImageButton
+                android:id="@+id/add_currency_button"
+                android:layout_width="0dip"
+                android:layout_height="fill_parent"
+                android:layout_weight="0.3"
+                android:contentDescription="@string/add_currency"
+                android:gravity="center_horizontal"
+                android:src="@drawable/ic_menu_plus"
+                android:onClick="addCurrency" >
+            </ImageButton>
+        </LinearLayout>
 
         <TextView
             android:id="@+id/state_field_text"
@@ -86,6 +125,31 @@
             android:id="@+id/state_field_edit"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
+
+        <LinearLayout
+            xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal" >
+
+            <Button
+                android:id="@+id/save_transaction_button"
+                android:layout_width="wrap_content"
+                android:layout_height="fill_parent"
+                android:layout_weight="1"
+                android:gravity="center_horizontal"
+                android:text="@string/save_transaction"
+                android:onClick="saveTransaction" />
+
+            <Button
+                android:id="@+id/cancel_transaction_button"
+                android:layout_width="wrap_content"
+                android:layout_height="fill_parent"
+                android:layout_weight="1"
+                android:gravity="center_horizontal"
+                android:text="@string/cancel_transaction"
+                android:onClick="cancelTransaction" />
+        </LinearLayout>
     </LinearLayout>
 
 </ScrollView>

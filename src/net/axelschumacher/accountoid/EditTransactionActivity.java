@@ -1,27 +1,32 @@
 package net.axelschumacher.accountoid;
 
+import java.text.DecimalFormat;
 import java.util.Calendar;
+import java.util.Currency;
 import java.util.Date;
-import java.util.Random;
 
 import net.axelschumacher.accountoid.Accountoid.Account;
 import net.axelschumacher.accountoid.Accountoid.Categories;
-
+import net.axelschumacher.accountoid.Accountoid.Currencies;
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.AlertDialog.Builder;
+import android.app.Dialog;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnFocusChangeListener;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.SimpleCursorAdapter;
 import android.widget.Spinner;
+import android.widget.TextView;
 
 /**
  * Edit a single transaction
@@ -60,11 +65,17 @@ public class EditTransactionActivity extends Activity {
 	/** Category input */
 	private Spinner categorySpinner;
 
+	/** Category selected index */
+	private int selectedCategory;
+
 	/** State input */
 	private Spinner stateSpinner;
 
 	/** Currency input */
 	private Spinner currencySpinner;
+
+	/** Currency selected index */
+	private int selectedCurrency;
 
 	// TODO handle savedInstanceState
 
@@ -110,16 +121,13 @@ public class EditTransactionActivity extends Activity {
 
 		// Getting the inputs
 		amountEditText = (EditText) findViewById(R.id.amount_field_edit);
+		// Format the input
 		amountEditText.setOnFocusChangeListener(new OnFocusChangeListener() {
-			@Override
 			public void onFocusChange(View v, boolean hasFocus) {
 				if (!hasFocus) {
 					try {
-						float f = Float.parseFloat(amountEditText.getText()
-								.toString());
-						Log.d(TAG, Float.toString(f));
-						amountEditText.setText(model.getDecimalFormat().format(
-								f));
+						amountEditText
+								.setText(formatAmountFromCurrencyAndAmount());
 					} catch (NumberFormatException e) {
 					}
 				}
@@ -149,13 +157,21 @@ public class EditTransactionActivity extends Activity {
 		startManagingCursor(cursorCategory);
 		String[] columns = new String[] { Categories.NAME };
 		int[] to = new int[] { android.R.id.text1 };
-		SimpleCursorAdapter mAdapter = new SimpleCursorAdapter(this,
+		SimpleCursorAdapter categoryAdapter = new SimpleCursorAdapter(this,
 				android.R.layout.simple_spinner_dropdown_item, cursorCategory,
 				columns, to);
-		categorySpinner.setAdapter(mAdapter);
-		ContentValues value = new ContentValues();
-		value.put(Categories.NAME, Integer.toString((new Random()).nextInt()));
-		model.getDataBase().insertCategory(value);
+		categorySpinner.setAdapter(categoryAdapter);
+		categorySpinner.setOnItemSelectedListener(new OnItemSelectedListener() {
+			public void onItemSelected(AdapterView<?> parent, View view,
+					int pos, long id) {
+				Cursor c = (Cursor) parent.getItemAtPosition(pos);
+				selectedCategory = c.getInt(c
+						.getColumnIndexOrThrow(Currencies._ID));
+			}
+
+			public void onNothingSelected(AdapterView<?> parent) {
+			}
+		});
 
 		stateSpinner = (Spinner) findViewById(R.id.state_field_edit);
 		ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
@@ -165,6 +181,179 @@ public class EditTransactionActivity extends Activity {
 		stateSpinner.setSelection(Accountoid.DEFAULT_STATE.ordinal());
 
 		currencySpinner = (Spinner) findViewById(R.id.currency_field_edit);
+		startManagingCursor(cursorCurrency);
+		SimpleCursorAdapter currencyAdapter = new SimpleCursorAdapter(this,
+				android.R.layout.simple_spinner_dropdown_item, cursorCurrency,
+				new String[] { Currencies.CODE },
+				new int[] { android.R.id.text1 });
+		// Change the code to the currency string
+		currencyAdapter.setViewBinder(new SimpleCursorAdapter.ViewBinder() {
+			public boolean setViewValue(View view, Cursor cursor, int column) {
+				TextView tv = (TextView) view;
+				String code = cursor.getString(cursor
+						.getColumnIndex(Currencies.CODE));
+				tv.setText(Currency.getInstance(code).getSymbol());
+				return true;
+			}
+		});
+		currencySpinner.setAdapter(currencyAdapter);
+		currencySpinner.setOnItemSelectedListener(new OnItemSelectedListener() {
+			public void onItemSelected(AdapterView<?> parent, View view,
+					int pos, long id) {
+				Cursor c = (Cursor) parent.getItemAtPosition(pos);
+				selectedCurrency = c.getInt(c
+						.getColumnIndexOrThrow(Currencies._ID));
+			}
+
+			public void onNothingSelected(AdapterView<?> parent) {
+			}
+		});
 	}
 
+	/**
+	 * Add a category
+	 * 
+	 * @param v
+	 */
+	public void addCategory(View v) {
+		ContentValues value = new ContentValues();
+		value.put(Categories.NAME, "Food");
+		model.getDataBase().insertCategory(value);
+		((SimpleCursorAdapter) categorySpinner.getAdapter()).changeCursor(model
+				.getDataBase().getCategories());
+	}
+
+	/**
+	 * Add a currency
+	 * 
+	 * @param v
+	 */
+	public void addCurrency(View v) {
+		ContentValues value = new ContentValues();
+		value.put(Currencies.CODE, "EUR");
+		model.getDataBase().insertCurrency(value);
+		((SimpleCursorAdapter) currencySpinner.getAdapter()).changeCursor(model
+				.getDataBase().getCurrencies());
+	}
+
+	/**
+	 * Format a string of float according to selected currency and
+	 * amountTextEdit value
+	 * 
+	 * @throws NumberFormatException
+	 */
+	public String formatAmountFromCurrencyAndAmount() {
+		// Start with parsing to avoid unnecessary computations in case of
+		// throwing
+		Log.d(TAG, "formatAmountFromCurrencyAndAmount");
+		float amount = Float.parseFloat(amountEditText.getEditableText()
+				.toString());
+		Currency currency = model.getDataBase().getCurrencyFromIndex(
+				selectedCurrency);
+		DecimalFormat df = model.getDecimalFormat(currency);
+		return df.format(amount);
+	}
+
+	/**
+	 * Save transaction
+	 */
+	public void saveTransaction(View v) {
+		Log.v(TAG, "Save transaction");
+		ContentValues value = new ContentValues();
+
+		// Parse amount and potentially handle a NumberFormatException
+		float amount;
+		try {
+			amount = Float.parseFloat(formatAmountFromCurrencyAndAmount());
+			if (amount == 0)
+				throw new NumberFormatException("Amount cannot be null");
+		} catch (NumberFormatException e) {
+			showDialog(DIALOG_COMPLAIN_AMOUNT);
+			return;
+		}
+		value.put(Account.AMOUNT, amount);
+
+		// Parse description and ask for it not to be empty
+		String description = descriptionEditText.getEditableText().toString();
+		if (description.isEmpty()) {
+			showDialog(DIALOG_COMPLAIN_DESCRIPTION);
+			return;
+		}
+		value.put(Account.DESCRIPTION, description);
+
+		// If no currency selected, user will create at least one
+		Object currencyObject = currencySpinner.getSelectedItem();
+		if (currencyObject == null) {
+			showDialog(DIALOG_COMPLAIN_CURRENCY);
+			addCurrency(null);
+			return;
+		}
+		long currency = currencySpinner.getSelectedItemId();
+		value.put(Account.CURRENCY, currency);
+
+		// If no category selected, user will create at least one
+		Object categoryObject = categorySpinner.getSelectedItem();
+		if (categoryObject == null) {
+			showDialog(DIALOG_COMPLAIN_CATEGORY);
+			addCategory(null);
+			return;
+		}
+		long category = categorySpinner.getSelectedItemId();
+		value.put(Account.CATEGORY, category);
+
+		// Handle state choice
+		long state = stateSpinner.getSelectedItemId();
+		value.put(Account.STATE, state);
+
+		model.getDataBase().insertAccount(value);
+		returnBrowsing();
+	}
+
+	public static final int DIALOG_COMPLAIN_AMOUNT = 0;
+	public static final int DIALOG_COMPLAIN_DESCRIPTION = 1;
+	public static final int DIALOG_COMPLAIN_CURRENCY = 2;
+	public static final int DIALOG_COMPLAIN_CATEGORY = 3;
+
+	protected void returnBrowsing() {
+		startActivity(new Intent(Intent.ACTION_DEFAULT, null, this,
+				BrowseActivity.class));
+	}
+
+	@Override
+	protected Dialog onCreateDialog(int id) {
+		AlertDialog.Builder alert = new Builder(this);
+		alert.setPositiveButton(R.string.ok, null);
+		alert.setCancelable(true);
+		switch (id) {
+		case DIALOG_COMPLAIN_AMOUNT:
+			alert.setTitle(R.string.dialog_error);
+			alert.setMessage(R.string.dialog_complain_amount_message);
+			break;
+		case DIALOG_COMPLAIN_DESCRIPTION:
+			alert.setTitle(R.string.dialog_error);
+			alert.setMessage(R.string.dialog_complain_description_message);
+			break;
+		case DIALOG_COMPLAIN_CURRENCY:
+			alert.setTitle(R.string.dialog_create_currency);
+			alert.setMessage(R.string.dialog_complain_currency_message);
+			break;
+		case DIALOG_COMPLAIN_CATEGORY:
+			alert.setTitle(R.string.dialog_create_category);
+			alert.setMessage(R.string.dialog_complain_category_message);
+			break;
+
+		default:
+			return null;
+		}
+		return alert.create();
+	}
+
+	/**
+	 * Cancel transaction
+	 */
+	public void cancelTransaction(View v) {
+		Log.v(TAG, "Cancel transaction");
+		// We simply return to the browsing activity
+		returnBrowsing();
+	}
 }

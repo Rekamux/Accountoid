@@ -1,5 +1,8 @@
 package net.axelschumacher.accountoid;
 
+import java.util.Currency;
+import java.util.Locale;
+
 import net.axelschumacher.accountoid.Accountoid.Account;
 import net.axelschumacher.accountoid.Accountoid.Categories;
 import net.axelschumacher.accountoid.Accountoid.Currencies;
@@ -17,7 +20,7 @@ import android.util.Log;
 
 public class AccountoidDataBase {
 
-    private static final String TAG = "AccountoidProvider";
+    private static final String TAG = "AccountoidDataBase";
 
 	private static final String DATABASE_NAME = "accountoid.db";
 	private static final int DATABASE_VERSION = 2;
@@ -61,6 +64,11 @@ public class AccountoidDataBase {
 					+ Currencies.CODE + " TEXT,"
 					+ Currencies.VALUE + " FLOAT"
 					+ ");");
+			
+			// Insert at least the local currency
+			ContentValues value = new ContentValues();
+			value.put(Currencies.CODE, Currency.getInstance(Locale.getDefault()).getCurrencyCode());
+			db.insert(CURRENCIES_TABLE_NAME, null, value);
 		}
 
 		@Override
@@ -204,7 +212,7 @@ public class AccountoidDataBase {
         return c;
 	}
 
-	public Uri insertCategory(ContentValues initialValues) {// Values to be inserted
+	public Uri insertCategory(ContentValues initialValues) {
         ContentValues values;
         if (initialValues != null)
             values = new ContentValues(initialValues);
@@ -221,10 +229,82 @@ public class AccountoidDataBase {
         SQLiteDatabase db = openHelper.getWritableDatabase();
         long rowId = db.insert(CATEGORIES_TABLE_NAME, null, values);
         if (rowId > 0) {
-            Uri noteUri = ContentUris.withAppendedId(Categories.CONTENT_URI, rowId);
-            return noteUri;
+            Uri catUri = ContentUris.withAppendedId(Categories.CONTENT_URI, rowId);
+            return catUri;
         }
         
         throw new SQLException("Failed to insert row into " + CATEGORIES_TABLE_NAME);
+	}
+
+	public Uri insertCurrency(ContentValues initialValues) {
+        ContentValues values;
+        if (initialValues != null)
+            values = new ContentValues(initialValues);
+        else
+            values = new ContentValues();
+        
+        
+        // Make sure that the fields are all set
+        if (!values.containsKey(Currencies.CODE))
+        	throw new IllegalArgumentException("A code must be specified");
+
+        String code = (String) values.get(Currencies.CODE);
+        Currency.getInstance(code); // Will throw an Illegal argument exception if not valid
+        
+        Log.v(TAG, "Inserting currency("+Currency.getInstance(code)+")");
+        
+        SQLiteDatabase db = openHelper.getWritableDatabase();
+        long rowId = db.insert(CURRENCIES_TABLE_NAME, null, values);
+        if (rowId > 0) {
+            Uri curUri = ContentUris.withAppendedId(Currencies.CONTENT_URI, rowId);
+            return curUri;
+        }
+        
+        throw new SQLException("Failed to insert row into " + CURRENCIES_TABLE_NAME);
+		
+	}
+
+	/**
+	 * Return a currency cursor from data base, given its index
+	 * @param index
+	 * @return cursor
+	 */
+	public Cursor getCurrencyCursorFromIndex(long index)
+	{
+        SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
+        qb.setTables(CURRENCIES_TABLE_NAME);
+        
+        String projection[] = {Currencies._ID, Currencies.CODE};
+        String where = Currencies._ID+"="+index;
+        
+        SQLiteDatabase db = openHelper.getReadableDatabase();
+        Cursor c = qb.query(db, projection, where, null, null, null, null);
+        
+        if (c.getCount() != 1)
+        	throw new IndexOutOfBoundsException("No result found for this index");
+		
+        return c;
+	}
+
+	/**
+	 * Return a currency code from data base, given its index
+	 * @param index
+	 * @return code
+	 */
+	public String getCurrencyCodeFromIndex(long index) {
+        Cursor c = getCurrencyCursorFromIndex(index);
+        int colIndex = c.getColumnIndex(Currencies.CODE);
+        c.moveToFirst();
+        return c.getString(colIndex);
+	}
+
+	/**
+	 * Return a currency from data base, given its index
+	 * @param l
+	 * @return currency
+	 */
+	public Currency getCurrencyFromIndex(long l)
+	{
+        return Currency.getInstance(getCurrencyCodeFromIndex(l));
 	}
 }

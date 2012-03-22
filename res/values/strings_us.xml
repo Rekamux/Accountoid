@@ -24,5 +24,17 @@
         <item >Cash</item>
         <item >Card</item>
     </string-array>
+    <string name="save_transaction">Save</string>
+    <string name="cancel_transaction">Cancel</string>
+    <string name="add_category">Add a category</string>
+    <string name="add_currency">Add a currency</string>
+    <string name="dialog_complain_amount_message">Amount cannot be null nor empty</string>
+    <string name="ok">OK</string>
+    <string name="dialog_error">Error</string>
+    <string name="dialog_complain_description_message">A description must be entered</string>
+    <string name="dialog_complain_currency_message">Choose your first currency</string>
+    <string name="dialog_create_currency">Create currency</string>
+    <string name="dialog_complain_category_message">You will create your first category</string>
+    <string name="dialog_create_category">Create category</string>
 
 </resources>

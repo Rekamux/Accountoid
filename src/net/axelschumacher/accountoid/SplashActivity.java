@@ -19,7 +19,6 @@ public class SplashActivity extends Activity implements View.OnTouchListener
         findViewById(R.id.imageView1).setOnTouchListener(this);
     }
 
-	@Override
 	public boolean onTouch(View arg0, MotionEvent arg1) {
 		startActivity(new Intent(this, BrowseActivity.class));
 		return true;
