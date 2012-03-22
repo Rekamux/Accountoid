@@ -12,6 +12,8 @@ import android.app.AlertDialog;
 import android.app.AlertDialog.Builder;
 import android.app.Dialog;
 import android.content.ContentValues;
+import android.content.DialogInterface;
+import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
@@ -65,7 +67,7 @@ public class EditTransactionActivity extends Activity {
 	private Spinner categorySpinner;
 
 	/** Category selected index */
-	private int selectedCategory;
+	private int selectedCategory = -1;
 
 	/** State input */
 	private Spinner stateSpinner;
@@ -74,7 +76,7 @@ public class EditTransactionActivity extends Activity {
 	private Spinner currencySpinner;
 
 	/** Currency selected index */
-	private int selectedCurrency;
+	private int selectedCurrency = -1;
 
 	/** Init timestamp */
 	long initTimestamp;
@@ -131,21 +133,11 @@ public class EditTransactionActivity extends Activity {
 
 		// Amount input
 		amountEditText = (EditText) findViewById(R.id.amount_field_edit);
-		// Format the input
-		amountEditText.setOnFocusChangeListener(new OnFocusChangeListener() {
-			public void onFocusChange(View v, boolean hasFocus) {
-				if (!hasFocus) {
-					try {
-						amountEditText
-								.setText(formatAmountFromCurrencyAndAmount());
-					} catch (NumberFormatException e) {
-					}
-				}
-			}
-		});
+		initAmount();
 
 		// Description input
 		descriptionEditText = (EditText) findViewById(R.id.description_field_edit);
+		initDescription();
 
 		// Date input
 		dateDatePicker = (DatePicker) findViewById(R.id.date_field_edit);
@@ -162,6 +154,34 @@ public class EditTransactionActivity extends Activity {
 		// Currency input
 		currencySpinner = (Spinner) findViewById(R.id.currency_field_edit);
 		initCurrency();
+	}
+
+	/**
+	 * Init the amount
+	 */
+	private void initAmount() {
+		// Format the input
+		amountEditText.setOnFocusChangeListener(new OnFocusChangeListener() {
+			public void onFocusChange(View v, boolean hasFocus) {
+				if (!hasFocus) {
+					try {
+						amountEditText
+								.setText(formatAmountFromCurrencyAndAmount());
+					} catch (NumberFormatException e) {
+					}
+				}
+			}
+		});
+		if (state == STATE_EDIT)
+			amountEditText.setText(Float.toString(initAmount));
+	}
+
+	/**
+	 * Init the description
+	 */
+	private void initDescription() {
+		if (state == STATE_EDIT)
+			descriptionEditText.setText(initDescription);
 	}
 
 	/**
@@ -189,22 +209,23 @@ public class EditTransactionActivity extends Activity {
 					int pos, long id) {
 				Cursor c = (Cursor) parent.getItemAtPosition(pos);
 				selectedCurrency = c.getInt(c
-						.getColumnIndexOrThrow(Currencies._ID));
+						.getColumnIndex(Currencies._ID));
 			}
 
 			public void onNothingSelected(AdapterView<?> parent) {
+				selectedCurrency = -1;
 			}
 		});
 
 		// init when editing
 		if (state == STATE_EDIT) {
 			int positionToSelect = 0;
-			for (int i=0; i<currencyAdapter.getCount(); i++)
-			{
-				Cursor c = (Cursor)(currencyAdapter.getItem(i));
-				
-			Log.d(TAG, "id: "+currencyAdapter.getItemId(i)+" object: "+c.getLong(c.getColumnIndex(Currencies._ID)));
-			//TODO
+			for (int i = 0; i < currencyAdapter.getCount(); i++) {
+				Cursor c = (Cursor) (currencyAdapter.getItem(i));
+
+				Log.d(TAG, "id: " + currencyAdapter.getItemId(i) + " object: "
+						+ c.getLong(c.getColumnIndex(Currencies._ID)));
+				// TODO
 			}
 			categorySpinner.setSelection(positionToSelect);
 		}
@@ -242,21 +263,21 @@ public class EditTransactionActivity extends Activity {
 					int pos, long id) {
 				Cursor c = (Cursor) parent.getItemAtPosition(pos);
 				selectedCategory = c.getInt(c
-						.getColumnIndexOrThrow(Categories._ID));
+						.getColumnIndex(Categories._ID));
 			}
 
 			public void onNothingSelected(AdapterView<?> parent) {
-				Log.d(TAG, "initCategory: nothing selected");
+				selectedCategory = -1;
 			}
 		});
 
 		// init when editing
 		if (state == STATE_EDIT) {
 			int positionToSelect = 0;
-			for (int i=0; i<categoryAdapter.getCount(); i++)
-			{
-			Log.d(TAG, "id: "+categoryAdapter.getItemId(i)+" object: "+categoryAdapter.getItem(i));
-			//TODO
+			for (int i = 0; i < categoryAdapter.getCount(); i++) {
+				Log.d(TAG, "id: " + categoryAdapter.getItemId(i) + " object: "
+						+ categoryAdapter.getItem(i));
+				// TODO
 			}
 			categorySpinner.setSelection(positionToSelect);
 		}
@@ -318,18 +339,17 @@ public class EditTransactionActivity extends Activity {
 	 * @param v
 	 */
 	public void addCategory(View v) {
-		ContentValues value = new ContentValues();
-		value.put(Categories.NAME, "Food");
-		model.getDataBase().insertCategory(value);
-		((SimpleCursorAdapter) categorySpinner.getAdapter()).changeCursor(model
-				.getDataBase().getCategories());
+		startActivity(new Intent(this, EditCategoriesActivity.class));
 	}
-	
+
 	@Override
 	protected void onResume() {
 		super.onResume();
+		// Update views
 		((SimpleCursorAdapter) currencySpinner.getAdapter()).changeCursor(model
 				.getDataBase().getCurrencies());
+		((SimpleCursorAdapter) categorySpinner.getAdapter()).changeCursor(model
+				.getDataBase().getCategories());
 	}
 
 	/**
@@ -353,8 +373,11 @@ public class EditTransactionActivity extends Activity {
 		Log.d(TAG, "formatAmountFromCurrencyAndAmount");
 		float amount = Float.parseFloat(amountEditText.getEditableText()
 				.toString());
-		Currency currency = model.getDataBase().getCurrencyFromIndex(
-				selectedCurrency);
+		Currency currency = null;
+		if (selectedCurrency != -1) {
+			currency = model.getDataBase().getCurrencyFromIndex(
+					selectedCurrency);
+		}
 		DecimalFormat df = model.getDecimalFormat(currency);
 		return df.format(amount);
 	}
@@ -392,7 +415,6 @@ public class EditTransactionActivity extends Activity {
 		Object currencyObject = currencySpinner.getSelectedItem();
 		if (currencyObject == null) {
 			showDialog(DIALOG_COMPLAIN_CURRENCY);
-			addCurrency(null);
 			return;
 		}
 		value.put(Account.CURRENCY, selectedCurrency);
@@ -436,24 +458,40 @@ public class EditTransactionActivity extends Activity {
 	@Override
 	protected Dialog onCreateDialog(int id) {
 		AlertDialog.Builder alert = new Builder(this);
-		alert.setPositiveButton(R.string.ok, null);
-		alert.setCancelable(true);
 		switch (id) {
 		case DIALOG_COMPLAIN_AMOUNT:
 			alert.setTitle(R.string.dialog_error);
 			alert.setMessage(R.string.dialog_complain_amount_message);
+			alert.setPositiveButton(R.string.ok, null);
+			alert.setCancelable(true);
 			break;
 		case DIALOG_COMPLAIN_DESCRIPTION:
 			alert.setTitle(R.string.dialog_error);
 			alert.setMessage(R.string.dialog_complain_description_message);
+			alert.setPositiveButton(R.string.ok, new OnClickListener() {
+				
+				public void onClick(DialogInterface dialog, int which) {
+					addCategory(null);
+				}
+			});
+			alert.setCancelable(false);
 			break;
 		case DIALOG_COMPLAIN_CURRENCY:
 			alert.setTitle(R.string.dialog_create_currency);
 			alert.setMessage(R.string.dialog_complain_currency_message);
+			alert.setPositiveButton(R.string.ok, new OnClickListener() {
+				
+				public void onClick(DialogInterface dialog, int which) {
+					addCurrency(null);
+				}
+			});
+			alert.setCancelable(false);
 			break;
 		case DIALOG_COMPLAIN_CATEGORY:
 			alert.setTitle(R.string.dialog_create_category);
 			alert.setMessage(R.string.dialog_complain_category_message);
+			alert.setPositiveButton(R.string.ok, null);
+			alert.setCancelable(true);
 			break;
 
 		default:

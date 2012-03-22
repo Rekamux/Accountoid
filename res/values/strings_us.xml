@@ -43,5 +43,9 @@
     <string name="dialog_last_currency">You cannot delete the last currency !</string>
     <string name="currency_delete">Delete this currency</string>
     <string name="dialog_currency_already_exists">This currency already exists !</string>
+    <string name="category_add_text">Description</string>
+    <string name="category_add_button">Add</string>
+    <string name="delete_currency_confirm_message"> transaction(s) use(s) this currency ! Do you really want to delete them all ?</string>
+    <string name="delete_currency_confirm_title">Transactions are using this currency</string>
 
 </resources>

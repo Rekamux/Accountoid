@@ -36,9 +36,6 @@ public class AccountoidDataBase {
 		CURRENCIES
 	}
 
-	/**
-	 * This class helps open, create, and upgrade the database file.
-	 */
 	private static class DatabaseHelper extends SQLiteOpenHelper {
 	    
 		DatabaseHelper(Context context) {
@@ -286,6 +283,7 @@ public class AccountoidDataBase {
         String projection[] = {Currencies._ID, Currencies.CODE};
         String where = Currencies._ID+"="+index;
         
+        
         SQLiteDatabase db = openHelper.getReadableDatabase();
         Cursor c = qb.query(db, projection, where, null, null, null, null);
         
@@ -327,5 +325,35 @@ public class AccountoidDataBase {
 		 count = db.delete(CURRENCIES_TABLE_NAME, Account._ID + "=" + id, null);
 		 
 		 return count == 1;
+	}
+	
+	/**
+	 * Delete all account using given currency id
+	 * @param id
+	 */
+	public void deleteAccountUsingCurrency(long id)
+	{
+        String where = Account.CURRENCY+"="+id;
+        
+        SQLiteDatabase db = openHelper.getReadableDatabase();
+        db.delete(ACCOUNT_TABLE_NAME, where, null);
+	}
+
+	/**
+	 * Return true if at least one transaction uses given currency id
+	 * @param id
+	 * @return
+	 */
+	public int getAccountsWithCurrency(long id) {
+        SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
+        qb.setTables(ACCOUNT_TABLE_NAME);
+        
+        String projection[] = {Account._ID};
+        String where = Account.CURRENCY+"="+id;
+        
+        SQLiteDatabase db = openHelper.getReadableDatabase();
+        Cursor c = qb.query(db, projection, where, null, null, null, null);
+        
+        return c.getCount();
 	}
 }

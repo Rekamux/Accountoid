@@ -8,6 +8,8 @@ import android.app.AlertDialog.Builder;
 import android.app.Dialog;
 import android.app.ListActivity;
 import android.content.ContentValues;
+import android.content.DialogInterface;
+import android.content.DialogInterface.OnClickListener;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteConstraintException;
 import android.os.Bundle;
@@ -35,13 +37,12 @@ public class EditCurrenciesActivity extends ListActivity {
 	private SimpleCursorAdapter adapter;
 
 	/** Menu buttons indexes */
-	public static final int MENU_ITEM_INSERT = 1;
-	public static final int MENU_ITEM_DELETE = 2;
+	public static final int MENU_ITEM_DELETE = 1;
 
 	/** Dialogs indexes */
-	public static final int DIALOG_LAST_ALIVE = 1;
-	public static final int DIALOG_CANNOT_FIND_CURRENCY = 2;
-	public static final int DIALOG_CANNOT_CURRENCY_ALREADY_EXISTS = 3;
+	public static final int DIALOG_CANNOT_FIND_CURRENCY = 1;
+	public static final int DIALOG_CURRENCY_ALREADY_EXISTS = 2;
+	public static final int DIALOG_USED_CURRENCY = 3;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -80,9 +81,32 @@ public class EditCurrenciesActivity extends ListActivity {
 		// Update view
 		adapter.changeCursor(model.getDataBase().getCurrencies());
 	}
+	
+	@Override
+	protected Dialog onCreateDialog(int id, Bundle b) {
+		Log.d(TAG, "onCreateDialog id="+id+" bundle="+b);
+		if (id == DIALOG_USED_CURRENCY)
+		{
+			final long beingDeleted = b.getLong(BUNDLE_BEING_DELETED_ID);
+			final int count = b.getInt(BUNDLE_ACCOUNTS_COUNT); 
+			AlertDialog.Builder alert = new Builder(this);
+			alert.setMessage(count+" "+getString(R.string.delete_currency_confirm_message));
+			alert.setTitle(R.string.delete_currency_confirm_title);
+			alert.setPositiveButton(R.string.yes, new OnClickListener() {
+				public void onClick(DialogInterface dialog, int which) {
+					removeCurrency(beingDeleted);
+				}
+			});
+			alert.setCancelable(true);
+			alert.setNegativeButton(R.string.no, null);
+			return alert.create();
+		}
+		return null;
+	}
 
 	@Override
 	protected Dialog onCreateDialog(int id) {
+		Log.d(TAG, "onCreateDialog id="+id);
 		AlertDialog.Builder alert = new Builder(this);
 		alert.setCancelable(true);
 		alert.setPositiveButton(R.string.ok, null);
@@ -91,10 +115,7 @@ public class EditCurrenciesActivity extends ListActivity {
 		case DIALOG_CANNOT_FIND_CURRENCY:
 			alert.setMessage(R.string.dialog_cannot_find_currency);
 			break;
-		case DIALOG_LAST_ALIVE:
-			alert.setMessage(R.string.dialog_last_currency);
-			break;
-		case DIALOG_CANNOT_CURRENCY_ALREADY_EXISTS:
+		case DIALOG_CURRENCY_ALREADY_EXISTS:
 			alert.setMessage(R.string.dialog_currency_already_exists);
 			break;
 
@@ -141,24 +162,41 @@ public class EditCurrenciesActivity extends ListActivity {
 
 		switch (item.getItemId()) {
 		case MENU_ITEM_DELETE: {
-			removeCurrency(info.id);
+			tryToRemoveCurrency(info.id);
 			return true;
 		}
 		}
 		return false;
 	}
+	
+	private final static String BUNDLE_BEING_DELETED_ID = "ID";
+	private final static String BUNDLE_ACCOUNTS_COUNT = "COUNT";
 
 	/**
 	 * Try to remove given currency
 	 * 
 	 * @param id
 	 */
-	private void removeCurrency(long id) {
-		if (model.getDataBase().getCurrencies().getCount() <= 1) {
-			showDialog(DIALOG_LAST_ALIVE);
+	private void tryToRemoveCurrency(long id) {
+		int accountsWithCurrency = model.getDataBase().getAccountsWithCurrency(id);
+		
+		if (accountsWithCurrency>=1)
+		{
+			Bundle b = new Bundle(2);
+			b.putLong(BUNDLE_BEING_DELETED_ID, id);
+			b.putInt(BUNDLE_ACCOUNTS_COUNT, accountsWithCurrency);
+			// To ensure a updated call to onCreateDialog(int, Bundle)
+			removeDialog(DIALOG_USED_CURRENCY);
+			showDialog(DIALOG_USED_CURRENCY, b);
 			return;
 		}
+		removeCurrency(id);
+	}
+	
+	private void removeCurrency(long id)
+	{
 		model.getDataBase().deleteCurrency(id);
+		model.getDataBase().deleteAccountUsingCurrency(id);
 		// Update view
 		adapter.changeCursor(model.getDataBase().getCurrencies());
 	}
@@ -179,7 +217,7 @@ public class EditCurrenciesActivity extends ListActivity {
 		} catch (SQLiteConstraintException e) {
 			// If the currency already exists
 			Log.d(TAG, "Sorry for the print stack trace, obviously from SQL code");
-			showDialog(DIALOG_CANNOT_CURRENCY_ALREADY_EXISTS);
+			showDialog(DIALOG_CURRENCY_ALREADY_EXISTS);
 			return;
 		} catch (IllegalArgumentException e) {
 			// If the code is not valid
