@@ -435,8 +435,11 @@ public class EditTransactionActivity extends Activity {
 		Log.d(TAG, "Amount: "+amount);
 		Currency currency = null;
 		if (selectedCurrency != -1) {
-			currency = model.getDataBase().getCurrencyFromIndex(
-					selectedCurrency);
+			try {
+				currency = model.getDataBase().getCurrencyFromIndex(
+						selectedCurrency);
+			} catch (Exception e) {
+			}
 		}
 		String formated = model.format(currency, amount, true);
 		Log.d(TAG, "Formated: " + formated);

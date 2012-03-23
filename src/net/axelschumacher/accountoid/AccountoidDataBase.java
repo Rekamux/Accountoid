@@ -305,7 +305,8 @@ public class AccountoidDataBase {
 	 * @param index
 	 * @return cursor
 	 */
-	public Cursor getCurrencyCursorFromIndex(long index) {
+	public Cursor getCurrencyCursorFromIndex(long index)
+			throws IndexOutOfBoundsException {
 		SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
 		qb.setTables(CURRENCIES_TABLE_NAME);
 
@@ -489,7 +490,8 @@ public class AccountoidDataBase {
 			float value = cursorCurrency.getFloat(cursorCurrency
 					.getColumnIndex(Currencies.VALUE));
 			if (value == 0)
-				throw new SQLException("Currency at "+currentCurrencyIndex+" has no rate !");
+				throw new SQLException("Currency at " + currentCurrencyIndex
+						+ " has no rate !");
 
 			float am = cursorAccount.getFloat(cursorAccount
 					.getColumnIndex(Account.AMOUNT));

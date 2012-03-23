@@ -162,22 +162,38 @@ public class BrowseActivity extends ListActivity {
 	private void updateViews() {
 		adapter.changeCursor(model.getDataBase().getAccountList());
 		TextView sumTextView = (TextView) findViewById(R.id.browse_total);
+
 		// Find currency from settings
 		SharedPreferences settings = getSharedPreferences(
 				Accountoid.PREFS_NAME, 0);
 		long currencyID = settings
 				.getLong(Accountoid.UPDATE_TOTAL_CURRENCY, -1);
+		Cursor currenciesCursor = model.getDataBase().getCurrencies();
+		boolean areCurrencies = currenciesCursor.getCount() != 0;
+
 		// If no settings, search for currency in database
+		if (!areCurrencies) {
+			Log.e(TAG, "No currency found at all !");
+			sumTextView.setText(getString(R.string.tap_to_update));
+			sumTextView.setTextColor(Color.WHITE);
+			// We remove the field
+			SharedPreferences.Editor editor = settings.edit();
+			editor.remove(Accountoid.UPDATE_TOTAL_CURRENCY);
+			return;
+		}
+
+		// Check if currency is inside the dataBase
+		try {
+			model.getDataBase().getCurrencyCursorFromIndex(currencyID);
+		} catch (Exception e) {
+			Log.e(TAG, "Saved currency doesn't belong to database !");
+			currencyID = -1;
+		}
+
+		// Check if saved currency is valid
 		if (currencyID == -1) {
 			Log.e(TAG, "No preference about total currency found !");
-			Cursor currenciesCursor = model.getDataBase().getCurrencies();
-			if (currenciesCursor.getCount() == 0) {
-				Log.e(TAG, "No currency found at all !");
-				sumTextView.setText(getString(R.string.tap_to_update));
-				sumTextView.setTextColor(Color.WHITE);
-				return;
-			}
-			// We have found a currency
+			// We have at least a currency
 			currenciesCursor.moveToFirst();
 			// We will use it
 			currencyID = currenciesCursor.getLong(currenciesCursor
@@ -186,6 +202,7 @@ public class BrowseActivity extends ListActivity {
 			// But we also save it
 			saveCurrencyID(currencyID);
 		}
+
 		Float sum = null;
 		try {
 			sum = model.getDataBase().getTransactionsSum(currencyID);
