@@ -33,10 +33,40 @@ public class Model {
 		return dataBase;
 	}
 
-	public NumberFormat getNumberFormat(Currency c) {
+	/**
+	 * Format the given float by handling negative ones and removing
+	 * parentheses, according to currency
+	 * 
+	 * @param c
+	 * @param f
+	 * @return
+	 */
+	public String format(Currency c, float f, boolean removeSymbols) {
 		if (c != null) {
 			numberFormat.setCurrency(c);
 		}
-		return numberFormat;
+		boolean negative = f < 0;
+		String formated = numberFormat.format(f);
+		if (removeSymbols)
+			formated = formated.replaceAll("[^0-9.-]", "");
+		else
+			formated = formated.replaceAll("[()]", "");
+		if (negative) {
+			String minus = "-";
+			formated = minus.concat(formated);
+		}
+		return formated;
+	}
+
+	/**
+	 * Format the given float by handling negative ones and removing
+	 * parentheses, according to currency, but will not remove symbols
+	 * 
+	 * @param c
+	 * @param f
+	 * @return
+	 */
+	public String format(Currency c, float f) {
+		return format(c, f, false);
 	}
 }

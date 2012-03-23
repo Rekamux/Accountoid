@@ -430,15 +430,14 @@ public class EditTransactionActivity extends Activity {
 		Log.d(TAG, "formatAmountFromCurrencyAndAmount");
 		float amount = Float.parseFloat(amountEditText.getEditableText()
 				.toString());
+		Log.d(TAG, "Amount: "+amount);
 		Currency currency = null;
 		if (selectedCurrency != -1) {
 			currency = model.getDataBase().getCurrencyFromIndex(
 					selectedCurrency);
 		}
-		String formated = model.getNumberFormat(currency).format(amount);
-		Log.d(TAG, "Formated before regexp: " + formated);
-		formated = formated.replaceAll("[^0-9.-]", "");
-		Log.d(TAG, "Formated after regexp: " + formated);
+		String formated = model.format(currency, amount, true);
+		Log.d(TAG, "Formated: " + formated);
 		return formated;
 	}
 

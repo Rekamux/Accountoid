@@ -82,9 +82,8 @@ public class BrowseActivity extends ListActivity {
 				cal.setTimeInMillis(date * 1000L);
 				Currency currency = model.getDataBase().getCurrencyFromIndex(
 						currencyId);
-				tv.setText(model.getNumberFormat(currency).format(amount)
-						+ " (" + description + ") "
-						+ model.getDateFormat().format(cal.getTime()));
+				tv.setText(model.format(currency, amount) + " (" + description
+						+ ") " + model.getDateFormat().format(cal.getTime()));
 
 				if (amount <= 0.0)
 					tv.setTextColor(Color.RED);
@@ -154,15 +153,14 @@ public class BrowseActivity extends ListActivity {
 				Accountoid.PREFS_NAME, 0);
 		long currencyID = settings
 				.getLong(Accountoid.UPDATE_TOTAL_CURRENCY, -1);
-		Float sum = model.getDataBase().getTransactionsSum(currencyID);
 		if (currencyID == -1) {
 			Log.e(TAG, "No preference about total currency found !");
 			return;
 		}
+		Float sum = model.getDataBase().getTransactionsSum(currencyID);
 		Currency currency = model.getDataBase()
 				.getCurrencyFromIndex(currencyID);
-		String sumString = sum != null ? model.getNumberFormat(currency)
-				.format(sum) : "";
+		String sumString = sum != null ? model.format(currency, sum) : "";
 		sumTextView.setText(getString(R.string.total) + ": " + sumString + " "
 				+ getString(R.string.tap_to_update));
 		if (sum < 0) {

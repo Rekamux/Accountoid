@@ -319,7 +319,7 @@ public class AccountoidDataBase {
 
 		if (c.getCount() != 1)
 			throw new IndexOutOfBoundsException(
-					"No result found for this index");
+					"No result found for this index:" + index);
 
 		return c;
 	}
