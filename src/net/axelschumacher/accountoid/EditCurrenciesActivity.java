@@ -12,6 +12,7 @@ import android.app.ListActivity;
 import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.SQLException;
@@ -97,6 +98,20 @@ public class EditCurrenciesActivity extends ListActivity {
 		});
 		setListAdapter(adapter);
 
+		// Add a choice listener on the list if action is ACTION_PICK
+		getListView().setOnItemClickListener(
+				new AdapterView.OnItemClickListener() {
+					public void onItemClick(AdapterView<?> adapter, View v,
+							int pos, long id) {
+						Log.d(TAG, "Clicked on item "+id+" at position "+pos);
+						if (getIntent().getAction().equals(Intent.ACTION_PICK)) {
+							setResult(RESULT_OK, new Intent().putExtra(
+									Accountoid.INTENT_ID_NAME, id));
+							finish();
+						}
+					}
+				});
+
 		updateRates();
 	}
 
@@ -105,7 +120,7 @@ public class EditCurrenciesActivity extends ListActivity {
 		super.onDestroy();
 		model.getDataBase().closeDataBase();
 	}
-	
+
 	@Override
 	protected void onPause() {
 		super.onPause();
@@ -198,16 +213,18 @@ public class EditCurrenciesActivity extends ListActivity {
 				adapter.changeCursor(model.getDataBase().getCurrencies());
 				SharedPreferences settings = getSharedPreferences(
 						Accountoid.PREFS_NAME, 0);
-				long timestamp = settings
-						.getLong(Accountoid.UPDATE_RATES_TIMESTAMP, -1);
+				long timestamp = settings.getLong(
+						Accountoid.UPDATE_RATES_TIMESTAMP, -1);
 				if (timestamp != -1) {
 					TextView lastRate = (TextView) findViewById(R.id.currency_last_update);
 					Calendar c = Calendar.getInstance();
 					c.setTimeInMillis(timestamp * 1000L);
 					String date = model.getDateFormat().format(c.getTime());
-					lastRate.setText(getString(R.string.last_update) + ": " + date);
+					lastRate.setText(getString(R.string.last_update) + ": "
+							+ date);
 				} else
-					Log.e(TAG, "preference " + Accountoid.UPDATE_RATES_TIMESTAMP
+					Log.e(TAG, "preference "
+							+ Accountoid.UPDATE_RATES_TIMESTAMP
 							+ " can't be found");
 			}
 		};

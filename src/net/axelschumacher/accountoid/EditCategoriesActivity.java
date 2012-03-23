@@ -7,6 +7,7 @@ import android.app.Dialog;
 import android.app.ListActivity;
 import android.content.ContentValues;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.DialogInterface.OnClickListener;
 import android.database.Cursor;
 import android.database.SQLException;
@@ -61,6 +62,20 @@ public class EditCategoriesActivity extends ListActivity {
 		adapter = new SimpleCursorAdapter(this, R.layout.categories_cols,
 				cursor, new String[] { Categories.NAME },
 				new int[] { R.id.categories_cols_text1 });
+
+		// Add a choice listener on the list if action is ACTION_PICK
+		getListView().setOnItemClickListener(
+				new AdapterView.OnItemClickListener() {
+					public void onItemClick(AdapterView<?> adapter, View v,
+							int pos, long id) {
+						Log.d(TAG, "Clicked on item "+id+" at position "+pos);
+						if (getIntent().getAction().equals(Intent.ACTION_PICK)) {
+							setResult(RESULT_OK, new Intent().putExtra(
+									Accountoid.INTENT_ID_NAME, id));
+							finish();
+						}
+					}
+				});
 
 		setListAdapter(adapter);
 	}

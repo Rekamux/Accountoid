@@ -68,7 +68,7 @@ public class EditTransactionActivity extends Activity {
 	private Spinner categorySpinner;
 
 	/** Category selected index */
-	private int selectedCategory = -1;
+	private long selectedCategory = -1;
 
 	/** Id */
 	private long id = -1;
@@ -80,7 +80,7 @@ public class EditTransactionActivity extends Activity {
 	private Spinner currencySpinner;
 
 	/** Currency selected index */
-	private int selectedCurrency = -1;
+	private long selectedCurrency = -1;
 
 	/** Init timestamp */
 	long initTimestamp;
@@ -165,7 +165,7 @@ public class EditTransactionActivity extends Activity {
 		super.onDestroy();
 		model.getDataBase().closeDataBase();
 	}
-	
+
 	@Override
 	protected void onPause() {
 		super.onPause();
@@ -252,13 +252,7 @@ public class EditTransactionActivity extends Activity {
 
 		// init when editing
 		if (state == STATE_EDIT) {
-			for (int i = 0; i < currencyAdapter.getCount(); i++) {
-				Cursor c = (Cursor) (currencyAdapter.getItem(i));
-				if (c.getLong(c.getColumnIndex(Currencies._ID)) == initCurrency) {
-					currencySpinner.setSelection(i);
-					break;
-				}
-			}
+			setSpinnerAtCategory(currencySpinner, initCurrency);
 		}
 	}
 
@@ -278,8 +272,7 @@ public class EditTransactionActivity extends Activity {
 		categorySpinner.setOnItemSelectedListener(new OnItemSelectedListener() {
 			public void onItemSelected(AdapterView<?> parent, View view,
 					int pos, long id) {
-				Cursor c = (Cursor) parent.getItemAtPosition(pos);
-				selectedCategory = c.getInt(c.getColumnIndex(Categories._ID));
+				selectedCategory = id;
 			}
 
 			public void onNothingSelected(AdapterView<?> parent) {
@@ -289,14 +282,27 @@ public class EditTransactionActivity extends Activity {
 
 		// init when editing
 		if (state == STATE_EDIT) {
-			for (int i = 0; i < categoryAdapter.getCount(); i++) {
-				Cursor c = (Cursor) (categoryAdapter.getItem(i));
-				if (c.getLong(c.getColumnIndex(Categories._ID)) == initCategory) {
-					categorySpinner.setSelection(i);
-					break;
-				}
+			setSpinnerAtCategory(categorySpinner, initCategory);
+		}
+	}
+
+	/**
+	 * Move given spinner to id from data base
+	 * @param spinner
+	 * @param id
+	 */
+	static public void setSpinnerAtCategory(
+			Spinner spinner,
+			long id) {
+		SimpleCursorAdapter adapter = (SimpleCursorAdapter) spinner.getAdapter();
+		for (int i = 0; i < adapter.getCount(); i++) {
+			Cursor c = (Cursor) (adapter.getItem(i));
+			if (c.getLong(c.getColumnIndex(Categories._ID)) == id) {
+				spinner.setSelection(i);
+				break;
 			}
 		}
+
 	}
 
 	/**
@@ -355,7 +361,44 @@ public class EditTransactionActivity extends Activity {
 	 * @param v
 	 */
 	public void addCategory(View v) {
-		startActivity(new Intent(this, EditCategoriesActivity.class));
+		startActivityForResult(new Intent(Intent.ACTION_PICK, null, this,
+				EditCategoriesActivity.class), Accountoid.RESULT_PICK_CATEGORY);
+	}
+
+	/**
+	 * Add a currency
+	 * 
+	 * @param v
+	 */
+	public void addCurrency(View v) {
+		startActivityForResult(new Intent(Intent.ACTION_PICK, null, this,
+				EditCurrenciesActivity.class), Accountoid.RESULT_PICK_CURRENCY);
+	}
+
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+		long id = data.getLongExtra(Accountoid.INTENT_ID_NAME, -1);
+		if (id == -1)
+		{
+			Log.e(TAG, "Result from activity with non valid id !");
+			return;
+		}
+		switch (requestCode) {
+		case Accountoid.RESULT_PICK_CATEGORY:
+			((SimpleCursorAdapter) categorySpinner.getAdapter()).changeCursor(model
+					.getDataBase().getCategories());
+			setSpinnerAtCategory(categorySpinner, id);
+			break;
+		case Accountoid.RESULT_PICK_CURRENCY:
+			((SimpleCursorAdapter) currencySpinner.getAdapter()).changeCursor(model
+					.getDataBase().getCurrencies());
+			setSpinnerAtCategory(currencySpinner, id);
+			break;
+
+		default:
+			break;
+		}
 	}
 
 	@Override
@@ -373,15 +416,6 @@ public class EditTransactionActivity extends Activity {
 				.getDataBase().getCurrencies());
 		((SimpleCursorAdapter) categorySpinner.getAdapter()).changeCursor(model
 				.getDataBase().getCategories());
-	}
-
-	/**
-	 * Add a currency
-	 * 
-	 * @param v
-	 */
-	public void addCurrency(View v) {
-		startActivity(new Intent(this, EditCurrenciesActivity.class));
 	}
 
 	/**

@@ -92,9 +92,14 @@ public class BrowseActivity extends ListActivity {
 			}
 		});
 		setListAdapter(adapter);
-		
-		//Add a click listener on total
-//		Text
+
+		// Add a click listener on total
+		TextView totalTextView = (TextView) findViewById(R.id.browse_total);
+		totalTextView.setOnClickListener(new View.OnClickListener() {
+			public void onClick(View v) {
+				editCurrencies();
+			}
+		});
 	}
 
 	@Override
@@ -121,8 +126,10 @@ public class BrowseActivity extends ListActivity {
 		TextView sumTextView = (TextView) findViewById(R.id.browse_total);
 		Float sum = model.getDataBase().getTransactionsSum();
 		if (sum != null) {
-			sumTextView.setText(getString(R.string.total)
-					+ ": "+model.getDecimalFormat(null).format(sum)+Currency.getInstance("USD").getSymbol());
+			sumTextView.setText(getString(R.string.total) + ": "
+					+ model.getDecimalFormat(null).format(sum)
+					+ Currency.getInstance("USD").getSymbol() + " "
+					+ getString(R.string.tap_to_update));
 			if (sum < 0) {
 				sumTextView.setTextColor(Color.RED);
 			} else {
@@ -196,12 +203,14 @@ public class BrowseActivity extends ListActivity {
 	}
 
 	private void editCurrencies() {
-		startActivity(new Intent(this, EditCurrenciesActivity.class));
+		startActivity(new Intent(Intent.ACTION_EDIT, null, this,
+				EditCurrenciesActivity.class));
 
 	}
 
 	private void editCategories() {
-		startActivity(new Intent(this, EditCategoriesActivity.class));
+		startActivity(new Intent(Intent.ACTION_EDIT, null, this,
+				EditCategoriesActivity.class));
 
 	}
 
