@@ -93,6 +93,12 @@ public class BrowseActivity extends ListActivity {
 		});
 		setListAdapter(adapter);
 	}
+	
+	@Override
+	protected void onPause() {
+		super.onPause();
+		model.getDataBase().closeDataBase();
+	}
 
 	@Override
 	protected void onDestroy() {

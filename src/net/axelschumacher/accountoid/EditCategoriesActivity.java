@@ -73,6 +73,12 @@ public class EditCategoriesActivity extends ListActivity {
 	}
 	
 	@Override
+	protected void onPause() {
+		super.onPause();
+		model.getDataBase().closeDataBase();
+	}
+	
+	@Override
 	protected void onDestroy() {
 		super.onDestroy();
 		model.getDataBase().closeDataBase();
@@ -223,13 +229,5 @@ public class EditCategoriesActivity extends ListActivity {
 		}
 		// Update view
 		adapter.changeCursor(model.getDataBase().getCategories());
-	}
-
-	/**
-	 * End activity and go back to previous page
-	 */
-	public void goBack(View v)
-	{
-		finish();
 	}
 }

@@ -165,6 +165,12 @@ public class EditTransactionActivity extends Activity {
 		super.onDestroy();
 		model.getDataBase().closeDataBase();
 	}
+	
+	@Override
+	protected void onPause() {
+		super.onPause();
+		model.getDataBase().closeDataBase();
+	}
 
 	/**
 	 * Init the amount

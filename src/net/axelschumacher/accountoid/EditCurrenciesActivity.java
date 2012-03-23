@@ -105,6 +105,12 @@ public class EditCurrenciesActivity extends ListActivity {
 		super.onDestroy();
 		model.getDataBase().closeDataBase();
 	}
+	
+	@Override
+	protected void onPause() {
+		super.onPause();
+		model.getDataBase().closeDataBase();
+	}
 
 	@Override
 	protected void onResume() {
