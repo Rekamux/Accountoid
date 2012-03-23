@@ -245,6 +245,7 @@ public class EditTransactionActivity extends Activity {
 			}
 
 			public void onNothingSelected(AdapterView<?> parent) {
+				Log.d(TAG, "Nothing selected currencies");
 				selectedCurrency = -1;
 			}
 		});
@@ -445,7 +446,6 @@ public class EditTransactionActivity extends Activity {
 		Object categoryObject = categorySpinner.getSelectedItem();
 		if (categoryObject == null) {
 			showDialog(DIALOG_COMPLAIN_CATEGORY);
-			addCategory(null);
 			return;
 		}
 		value.put(Account.CATEGORY, selectedCategory);

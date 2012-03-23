@@ -23,8 +23,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:inputType="number|numberDecimal|numberSigned" >
-
-            <requestFocus />
         </EditText>
 
         <TextView
@@ -79,8 +77,8 @@
                 android:layout_weight="0.3"
                 android:contentDescription="@string/add_category"
                 android:gravity="center_horizontal"
-                android:src="@drawable/ic_menu_plus"
-                android:onClick="addCategory" >
+                android:onClick="addCategory"
+                android:src="@drawable/ic_menu_plus" >
             </ImageButton>
         </LinearLayout>
 
@@ -110,8 +108,8 @@
                 android:layout_weight="0.3"
                 android:contentDescription="@string/add_currency"
                 android:gravity="center_horizontal"
-                android:src="@drawable/ic_menu_plus"
-                android:onClick="addCurrency" >
+                android:onClick="addCurrency"
+                android:src="@drawable/ic_menu_plus" >
             </ImageButton>
         </LinearLayout>
 
@@ -139,8 +137,8 @@
                 android:layout_height="fill_parent"
                 android:layout_weight="1"
                 android:gravity="center_horizontal"
-                android:text="@string/save_transaction"
-                android:onClick="saveTransaction" />
+                android:onClick="saveTransaction"
+                android:text="@string/save_transaction" />
 
             <Button
                 android:id="@+id/cancel_transaction_button"
@@ -148,8 +146,8 @@
                 android:layout_height="fill_parent"
                 android:layout_weight="1"
                 android:gravity="center_horizontal"
-                android:text="@string/cancel_transaction"
-                android:onClick="cancelTransaction" />
+                android:onClick="cancelTransaction"
+                android:text="@string/cancel_transaction" />
         </LinearLayout>
     </LinearLayout>
 
