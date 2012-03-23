@@ -174,6 +174,16 @@ public class AccountoidDataBase {
         return count == 1;
     }
 
+	/**
+	 * Update a currency rate
+	 * @param code
+	 * @param rate
+	 */
+	public void updateCurrencyRate(long id, ContentValues values) {
+        SQLiteDatabase db = openHelper.getWritableDatabase();
+        db.update(CURRENCIES_TABLE_NAME, values, Currencies._ID +"="+id, null);
+	}
+
     /**
      * Return all categories
      * @return all categories
@@ -202,7 +212,7 @@ public class AccountoidDataBase {
 
         String orderBy = Currencies.DEFAULT_SORT_ORDER;
         
-        String projection[] = {Currencies._ID, Currencies.CODE};
+        String projection[] = {Currencies._ID, Currencies.CODE, Currencies.VALUE};
         
         SQLiteDatabase db = openHelper.getReadableDatabase();
         Cursor c = qb.query(db, projection, null, null, null, null, orderBy);

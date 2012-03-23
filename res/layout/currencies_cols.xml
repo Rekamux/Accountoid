@@ -2,14 +2,13 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    android:orientation="vertical" >
+    android:orientation="horizontal" >
 
     <TextView
         xmlns:android="http://schemas.android.com/apk/res/android"
         android:id="@+id/currencies_cols_text1"
         android:layout_width="match_parent"
         android:layout_height="?android:attr/listPreferredItemHeight"
-        android:gravity="center_vertical"
         android:paddingLeft="5dip"
         android:singleLine="true"
         android:textAppearance="?android:attr/textAppearanceLarge" >

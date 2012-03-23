@@ -1,51 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="wrap_content"
-    android:orientation="vertical" >
+	android:layout_width="fill_parent" android:layout_height="wrap_content"
+	android:orientation="vertical">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:baselineAligned="true" >
+	<LinearLayout android:layout_width="match_parent"
+		android:layout_height="wrap_content" android:layout_gravity="center"
+		android:baselineAligned="true">
 
-        <TextView
-            android:id="@+id/currency_add_text"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:gravity="center_horizontal"
-            android:text="@string/currency_add_text"
-            android:textAppearance="?android:attr/textAppearanceLarge" />
+		<TextView android:id="@+id/currency_add_text"
+			android:layout_width="match_parent" android:layout_height="wrap_content"
+			android:layout_weight="1" android:gravity="center_horizontal"
+			android:text="@string/currency_add_text" android:textAppearance="?android:attr/textAppearanceLarge" />
 
-        <EditText
-            android:id="@+id/currency_edit"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_gravity="center"
-            android:layout_weight="1"
-            android:inputType="textCapCharacters" />
+		<EditText android:id="@+id/currency_edit"
+			android:layout_width="match_parent" android:layout_height="match_parent"
+			android:layout_gravity="center" android:layout_weight="1"
+			android:inputType="textCapCharacters" />
 
-        <Button
-            xmlns:android="http://schemas.android.com/apk/res/android"
-            android:id="@+id/currency_add_button"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="right"
-            android:layout_weight="1"
-            android:onClick="addCurrency"
-            android:text="@string/currency_add_button" />
-    </LinearLayout>
+		<Button xmlns:android="http://schemas.android.com/apk/res/android"
+			android:id="@+id/currency_add_button" android:layout_width="fill_parent"
+			android:layout_height="wrap_content" android:layout_gravity="right"
+			android:layout_weight="1" android:onClick="addCurrency"
+			android:text="@string/currency_add_button" />
+	</LinearLayout>
 
-    <ListView
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        android:id="@android:id/list"
-        android:layout_width="match_parent"
-        android:layout_height="fill_parent"
-        android:paddingLeft="5dip"
-        android:singleLine="true"
-        android:textAppearance="?android:attr/textAppearanceLarge" >
-    </ListView>
+	<ListView xmlns:android="http://schemas.android.com/apk/res/android"
+		android:id="@android:id/list" android:layout_width="match_parent"
+		android:layout_height="fill_parent" android:paddingLeft="5dip"
+		android:singleLine="true" android:textAppearance="?android:attr/textAppearanceLarge">
+	</ListView>
+
+	<TextView android:id="@+id/currency_last_update"
+		android:layout_width="match_parent" android:layout_height="wrap_content"
+		android:layout_weight="1" android:gravity="center_horizontal"
+		android:text="" android:textAppearance="?android:attr/textAppearanceMedium" />
 
 </LinearLayout>

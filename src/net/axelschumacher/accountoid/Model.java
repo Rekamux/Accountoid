@@ -11,6 +11,8 @@ import android.content.Context;
 public class Model {
 	@SuppressWarnings("unused")
 	private static final String TAG = "Model"; 
+	
+	public static long lastRateUpdate;
 
 	/**
 	 * Handle Currency decimal format

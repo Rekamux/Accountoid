@@ -23,6 +23,7 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class BrowseActivity extends ListActivity {
 	/** Debug TAG */
@@ -39,6 +40,7 @@ public class BrowseActivity extends ListActivity {
 	public static final int MENU_ITEM_DELETE = 2;
 	public static final int MENU_ITEM_DELETE_ALL = 3;
 	public static final int MENU_ITEM_EDIT = 4;
+	public static final int MENU_UPDATE_RATES = 5;
 
 	/** Dialogs indexes */
 	public static final int DIALOG_DELETE_ALL = 1;
@@ -84,6 +86,8 @@ public class BrowseActivity extends ListActivity {
 			}
 		});
 		setListAdapter(adapter);
+		
+		updateRates();
 	}
 	
 	@Override
@@ -124,6 +128,7 @@ public class BrowseActivity extends ListActivity {
 
 		menu.add(0, MENU_ITEM_INSERT, 0, R.string.browse_add);
 		menu.add(0, MENU_ITEM_DELETE_ALL, 0, R.string.browse_delete_all);
+		menu.add(0, MENU_UPDATE_RATES, 0, R.string.browse_update_rates);
 
 		return true;
 	}
@@ -144,6 +149,9 @@ public class BrowseActivity extends ListActivity {
 			return true;
 		case MENU_ITEM_DELETE_ALL:
 			askRemoveAllAccounts();
+			return true;
+		case MENU_UPDATE_RATES:
+			updateRates();
 			return true;
 		}
 		return super.onOptionsItemSelected(item);
@@ -225,5 +233,17 @@ public class BrowseActivity extends ListActivity {
 				EditTransactionActivity.class);
 		intent.putExtra(Accountoid.INTENT_ID_NAME, id);
 		startActivity(intent);
+	}
+	
+	/**
+	 * Updates rates in background
+	 */
+	private void updateRates()
+	{
+		Toast toast = Toast.makeText(this, R.string.start_update, Toast.LENGTH_SHORT);
+		toast.show();
+		UpdateRatesTask task = new UpdateRatesTask(this);
+		Object[] o = null;
+		task.execute(o);
 	}
 }

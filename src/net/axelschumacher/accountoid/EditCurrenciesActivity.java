@@ -1,5 +1,7 @@
 package net.axelschumacher.accountoid;
 
+import java.text.DecimalFormat;
+import java.util.Calendar;
 import java.util.Currency;
 
 import net.axelschumacher.accountoid.Accountoid.Currencies;
@@ -43,7 +45,7 @@ public class EditCurrenciesActivity extends ListActivity {
 	public static final int DIALOG_CANNOT_FIND_CURRENCY = 1;
 	public static final int DIALOG_CURRENCY_ALREADY_EXISTS = 2;
 	public static final int DIALOG_USED_CURRENCY = 3;
-	
+
 	/** Bundle data */
 	private final static String BUNDLE_BEING_DELETED_ID = "ID";
 	private final static String BUNDLE_ACCOUNTS_COUNT = "COUNT";
@@ -62,21 +64,34 @@ public class EditCurrenciesActivity extends ListActivity {
 
 		Cursor cursor = model.getDataBase().getCurrencies();
 		adapter = new SimpleCursorAdapter(this, R.layout.currencies_cols,
-				cursor, new String[] { Currencies.CODE },
-				new int[] { R.id.currencies_cols_text1 });
+				cursor, new String[] { Currencies.CODE, Currencies.VALUE },
+				new int[] { R.id.currencies_cols_text1});
 
 		// To have a personalized render
 		adapter.setViewBinder(new SimpleCursorAdapter.ViewBinder() {
 			public boolean setViewValue(View view, Cursor cursor, int column) {
 				TextView tv = (TextView) view;
-				String currencyCode = cursor.getString(cursor
-						.getColumnIndex(Currencies.CODE));
-				Currency currency = Currency.getInstance(currencyCode);
-				tv.setText(currency.getSymbol() + " (" + currencyCode + ")");
+					String currencyCode = cursor.getString(cursor
+							.getColumnIndex(Currencies.CODE));
+					Currency currency = Currency.getInstance(currencyCode);
+					Currency usd = Currency.getInstance("USD");
+					float value = cursor.getFloat(cursor.getColumnIndex(Currencies.VALUE));
+					String text;
+					if (value != 0)
+						text = new DecimalFormat("#.####").format(1.0/value)+usd.getSymbol();
+					else
+						text = "";
+					tv.setText(currency.getSymbol() + " (" + currencyCode + ") (Value: "+text+")");
 				return true;
 			}
 		});
 		setListAdapter(adapter);
+		
+		TextView lastRate = (TextView) findViewById(R.id.currency_last_update);
+		Calendar c = Calendar.getInstance();
+		c.setTimeInMillis(model.lastRateUpdate*1000L);
+		Log.d(TAG, "Timestamp: "+model.lastRateUpdate);
+		lastRate.setText(c.toString());
 	}
 
 	@Override
@@ -84,19 +99,25 @@ public class EditCurrenciesActivity extends ListActivity {
 		super.onResume();
 		// Update view
 		adapter.changeCursor(model.getDataBase().getCurrencies());
+		
+		TextView lastRate = (TextView) findViewById(R.id.currency_last_update);
+		Calendar c = Calendar.getInstance();
+		c.setTimeInMillis(model.lastRateUpdate*1000L);
+		Log.d(TAG, "Timestamp: "+model.lastRateUpdate);
+		lastRate.setText(c.toString());
 	}
-	
+
 	@Override
 	protected Dialog onCreateDialog(int id, Bundle b) {
-		Log.d(TAG, "onCreateDialog id="+id+" bundle="+b);
+		Log.d(TAG, "onCreateDialog id=" + id + " bundle=" + b);
 		if (b == null)
 			return onCreateDialog(id);
-		if (id == DIALOG_USED_CURRENCY)
-		{
+		if (id == DIALOG_USED_CURRENCY) {
 			final long beingDeleted = b.getLong(BUNDLE_BEING_DELETED_ID);
-			final int count = b.getInt(BUNDLE_ACCOUNTS_COUNT); 
+			final int count = b.getInt(BUNDLE_ACCOUNTS_COUNT);
 			AlertDialog.Builder alert = new Builder(this);
-			alert.setMessage(count+" "+getString(R.string.delete_currency_confirm_message));
+			alert.setMessage(count + " "
+					+ getString(R.string.delete_currency_confirm_message));
 			alert.setTitle(R.string.delete_currency_confirm_title);
 			alert.setPositiveButton(R.string.yes, new OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
@@ -112,7 +133,7 @@ public class EditCurrenciesActivity extends ListActivity {
 
 	@Override
 	protected Dialog onCreateDialog(int id) {
-		Log.d(TAG, "onCreateDialog id="+id);
+		Log.d(TAG, "onCreateDialog id=" + id);
 		AlertDialog.Builder alert = new Builder(this);
 		alert.setCancelable(true);
 		alert.setPositiveButton(R.string.ok, null);
@@ -181,10 +202,10 @@ public class EditCurrenciesActivity extends ListActivity {
 	 * @param id
 	 */
 	private void tryToRemoveCurrency(long id) {
-		int accountsWithCurrency = model.getDataBase().getAccountsWithCurrency(id);
-		
-		if (accountsWithCurrency>=1)
-		{
+		int accountsWithCurrency = model.getDataBase().getAccountsWithCurrency(
+				id);
+
+		if (accountsWithCurrency >= 1) {
 			Bundle b = new Bundle(2);
 			b.putLong(BUNDLE_BEING_DELETED_ID, id);
 			b.putInt(BUNDLE_ACCOUNTS_COUNT, accountsWithCurrency);
@@ -195,9 +216,8 @@ public class EditCurrenciesActivity extends ListActivity {
 		}
 		removeCurrency(id);
 	}
-	
-	private void removeCurrency(long id)
-	{
+
+	private void removeCurrency(long id) {
 		model.getDataBase().deleteCurrency(id);
 		model.getDataBase().deleteAccountUsingCurrency(id);
 		// Update view
@@ -219,7 +239,8 @@ public class EditCurrenciesActivity extends ListActivity {
 			model.getDataBase().insertCurrency(value);
 		} catch (SQLException e) {
 			// If the currency already exists
-			Log.d(TAG, "Sorry for the print stack trace, obviously from SQL code");
+			Log.d(TAG,
+					"Sorry for the print stack trace, obviously from SQL code");
 			showDialog(DIALOG_CURRENCY_ALREADY_EXISTS);
 			return;
 		} catch (IllegalArgumentException e) {
