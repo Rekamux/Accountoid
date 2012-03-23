@@ -30,6 +30,8 @@ public class Accountoid {
 
 	/** Timestamp field name */
 	public static final String UPDATE_RATES_TIMESTAMP = "timestamp";
+	/** Total currency field name */
+	public static final String UPDATE_TOTAL_CURRENCY = "currency";
 
 	/** Results code for start activity for result */
 	public static final int RESULT_PICK_CATEGORY = 0;

@@ -1,6 +1,5 @@
 package net.axelschumacher.accountoid;
 
-import java.text.DecimalFormat;
 import java.util.Calendar;
 import java.util.Currency;
 
@@ -435,8 +434,11 @@ public class EditTransactionActivity extends Activity {
 			currency = model.getDataBase().getCurrencyFromIndex(
 					selectedCurrency);
 		}
-		DecimalFormat df = model.getDecimalFormat(currency);
-		return df.format(amount);
+		String formated = model.getNumberFormat(currency).format(amount);
+		Log.d(TAG, "Formated before regexp: "+formated);
+		formated = formated.replaceAll("[^0-9.-]", "");
+		Log.d(TAG, "Formated after regexp: "+formated);
+		return formated;
 	}
 
 	/**

@@ -43,6 +43,13 @@ public class UpdateRatesTask extends AsyncTask<Object, Object, Object> {
 	// http://josscrowcroft.github.com/open-exchange-rates/
 	private static final String ALL_USD_URL = "https://raw.github.com/currencybot/open-exchange-rates/master/latest.json";
 
+	/**
+	 * Get data from web and update shared preferences
+	 * 
+	 * @return
+	 * @throws ClientProtocolException
+	 * @throws IOException
+	 */
 	private JSONObject updateJSON() throws ClientProtocolException, IOException {
 		String feed = readFeed();
 		JSONObject rates = null;
@@ -50,7 +57,7 @@ public class UpdateRatesTask extends AsyncTask<Object, Object, Object> {
 			JSONObject values = (JSONObject) new JSONTokener(feed).nextValue();
 			rates = values.getJSONObject("rates");
 			long lastRateUpdate = values.getLong("timestamp");
-			Log.d(TAG, "Saved Timestamp: "+lastRateUpdate);
+			Log.d(TAG, "Saved Timestamp: " + lastRateUpdate);
 			// Save it for next run
 			SharedPreferences settings = context.getSharedPreferences(
 					Accountoid.PREFS_NAME, 0);
@@ -58,11 +65,18 @@ public class UpdateRatesTask extends AsyncTask<Object, Object, Object> {
 			editor.putLong(Accountoid.UPDATE_RATES_TIMESTAMP, lastRateUpdate);
 			editor.commit();
 		} catch (Exception e) {
-			e.printStackTrace();
+			Log.e(TAG, e.getMessage());
 		}
 		return rates;
 	}
 
+	/**
+	 * Build JSON string from web
+	 * 
+	 * @return
+	 * @throws ClientProtocolException
+	 * @throws IOException
+	 */
 	private String readFeed() throws ClientProtocolException, IOException {
 		StringBuilder builder = new StringBuilder();
 		HttpClient client = new DefaultHttpClient();
@@ -106,21 +120,32 @@ public class UpdateRatesTask extends AsyncTask<Object, Object, Object> {
 			JSONObject result = updateJSON();
 			Cursor c = model.getDataBase().getCurrencies();
 			c.moveToFirst();
+			boolean wentWell = true;
 			do {
+				// Update data base for each currency
 				String code = c.getString(c.getColumnIndex(Currencies.CODE));
-				Log.d(TAG, "Treating code " + code);
-				double rate = result.getDouble(code);
-				long id = c.getLong(c.getColumnIndex(Currencies._ID));
-				Log.d(TAG, "Value of " + code + " in USD: " + rate);
-				ContentValues v = new ContentValues();
-				v.put(Currencies._ID, id);
-				v.put(Currencies.CODE, code);
-				v.put(Currencies.VALUE, rate);
-				model.getDataBase().updateCurrencyRate(id, v);
-				Log.d(TAG, "Updated " + code);
+				try {
+					Log.d(TAG, "Treating code " + code);
+					double rate = result.getDouble(code);
+					long id = c.getLong(c.getColumnIndex(Currencies._ID));
+					Log.d(TAG, "Value of " + code + " in USD: " + rate);
+					ContentValues v = new ContentValues();
+					v.put(Currencies._ID, id);
+					v.put(Currencies.CODE, code);
+					v.put(Currencies.VALUE, rate);
+					model.getDataBase().updateCurrencyRate(id, v);
+					Log.d(TAG, "Updated " + code);
+				} catch (Exception e) {
+					// To keep on getting the other values
+					wentWell = false;
+					Log.e(TAG, "Failed to get rate for " + code);
+					Log.d(TAG, "Reason: " + e.getMessage());
+				}
 			} while (c.moveToNext());
-			return Boolean.TRUE;
+			model.getDataBase().closeDataBase();
+			return Boolean.valueOf(wentWell);
 		} catch (Exception e) {
+			model.getDataBase().closeDataBase();
 			Log.d(TAG, e.getMessage());
 			return Boolean.FALSE;
 		}

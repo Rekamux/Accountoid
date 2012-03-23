@@ -63,5 +63,6 @@
     <string name="browse_edit_currencies">Edit currencies</string>
     <string name="total">Total</string>
     <string name="tap_to_update">(tap to update)</string>
+    <string name="browse_edit_total_currency">Change total currency</string>
 
 </resources>

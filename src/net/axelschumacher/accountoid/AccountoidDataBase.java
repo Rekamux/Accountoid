@@ -457,24 +457,44 @@ public class AccountoidDataBase {
 			database = openHelper.getReadableDatabase();
 	}
 
-	public float getTransactionsSum() {
+	/**
+	 * Get the sum of all transactions, based on given currency
+	 * 
+	 * @param currencyId
+	 * @return
+	 */
+	public float getTransactionsSum(long currencyId) {
 		openDataBase();
-		Cursor c = getAccountList();
-		c.moveToFirst();
-		if (c.getCount() == 0)
+
+		// Get list of transactions
+		Cursor cursorAccount = getAccountList();
+		cursorAccount.moveToFirst();
+		if (cursorAccount.getCount() == 0) {
+			closeDataBase();
 			return 0;
-		float r = 0;
+		}
+
+		// Get currency value in USD
+		Cursor baseCurrencyCursor = getCurrencyCursorFromIndex(currencyId);
+		baseCurrencyCursor.moveToFirst();
+		float rate = baseCurrencyCursor.getFloat(baseCurrencyCursor
+				.getColumnIndex(Currencies.VALUE));
+
+		float sum = 0;
 		do {
-			Cursor curs = getCurrencyCursorFromIndex(c.getLong(c
-					.getColumnIndex(Account.CURRENCY)));
-			curs.moveToFirst();
-			float value = curs.getFloat(curs.getColumnIndex(Currencies.VALUE));
+			Cursor cursorCurrency = getCurrencyCursorFromIndex(cursorAccount
+					.getLong(cursorAccount.getColumnIndex(Account.CURRENCY)));
+			cursorCurrency.moveToFirst();
+			float value = cursorCurrency.getFloat(cursorCurrency
+					.getColumnIndex(Currencies.VALUE));
 			if (value != 0) {
-				float am = c.getFloat(c.getColumnIndex(Account.AMOUNT));
-				r += am / value;
+				float am = cursorAccount.getFloat(cursorAccount
+						.getColumnIndex(Account.AMOUNT));
+				sum += am / value * rate;
 			}
 
-		} while (c.moveToNext());
-		return r;
+		} while (cursorAccount.moveToNext());
+		closeDataBase();
+		return sum;
 	}
 }

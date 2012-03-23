@@ -11,6 +11,7 @@ import android.app.ListActivity;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -42,6 +43,7 @@ public class BrowseActivity extends ListActivity {
 	public static final int MENU_ITEM_EDIT = 4;
 	public static final int MENU_EDIT_CURRENCIES = 5;
 	public static final int MENU_EDIT_CATEGORIES = 6;
+	public static final int MENU_EDIT_TOTAL_CURRENCY = 7;
 
 	/** Dialogs indexes */
 	public static final int DIALOG_DELETE_ALL = 1;
@@ -75,15 +77,15 @@ public class BrowseActivity extends ListActivity {
 				int currencyId = cursor.getInt(cursor
 						.getColumnIndex(Account.CURRENCY));
 				long date = cursor.getLong(cursor.getColumnIndex(Account.DATE));
+
 				Calendar cal = Calendar.getInstance();
 				cal.setTimeInMillis(date * 1000L);
-				Log.d(TAG, "For entry with currency " + currencyId);
-				String currencyCode = model.getDataBase()
-						.getCurrencyCodeFromIndex(currencyId);
-				Currency currency = Currency.getInstance(currencyCode);
-				tv.setText(model.getDecimalFormat(currency).format(amount)
-						+ currency.getSymbol() + " (" + description + ") "
+				Currency currency = model.getDataBase().getCurrencyFromIndex(
+						currencyId);
+				tv.setText(model.getNumberFormat(currency).format(amount)
+						+ " (" + description + ") "
 						+ model.getDateFormat().format(cal.getTime()));
+
 				if (amount <= 0.0)
 					tv.setTextColor(Color.RED);
 				else
@@ -97,7 +99,7 @@ public class BrowseActivity extends ListActivity {
 		TextView totalTextView = (TextView) findViewById(R.id.browse_total);
 		totalTextView.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
-				editCurrencies();
+				setTotalCurrency();
 			}
 		});
 	}
@@ -121,30 +123,67 @@ public class BrowseActivity extends ListActivity {
 		updateViews();
 	}
 
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+		if (data == null)
+			return;
+		long id = data.getLongExtra(Accountoid.INTENT_ID_NAME, -1);
+		if (id == -1) {
+			Log.e(TAG, "Result from activity with non valid id !");
+			return;
+		}
+		switch (requestCode) {
+		case Accountoid.RESULT_PICK_CURRENCY:
+			SharedPreferences settings = getSharedPreferences(
+					Accountoid.PREFS_NAME, 0);
+			SharedPreferences.Editor editor = settings.edit();
+			editor.putLong(Accountoid.UPDATE_TOTAL_CURRENCY, id);
+			editor.commit();
+			break;
+
+		default:
+			break;
+		}
+	}
+
 	private void updateViews() {
 		adapter.changeCursor(model.getDataBase().getAccountList());
 		TextView sumTextView = (TextView) findViewById(R.id.browse_total);
-		Float sum = model.getDataBase().getTransactionsSum();
-		if (sum != null) {
-			sumTextView.setText(getString(R.string.total) + ": "
-					+ model.getDecimalFormat(null).format(sum)
-					+ Currency.getInstance("USD").getSymbol() + " "
-					+ getString(R.string.tap_to_update));
-			if (sum < 0) {
-				sumTextView.setTextColor(Color.RED);
-			} else {
-				sumTextView.setTextColor(Color.GREEN);
-
-			}
+		SharedPreferences settings = getSharedPreferences(
+				Accountoid.PREFS_NAME, 0);
+		long currencyID = settings
+				.getLong(Accountoid.UPDATE_TOTAL_CURRENCY, -1);
+		Float sum = model.getDataBase().getTransactionsSum(currencyID);
+		if (currencyID == -1) {
+			Log.e(TAG, "No preference about total currency found !");
+			return;
 		}
+		Currency currency = model.getDataBase()
+				.getCurrencyFromIndex(currencyID);
+		String sumString = sum != null ? model.getNumberFormat(currency)
+				.format(sum) : "";
+		sumTextView.setText(getString(R.string.total) + ": " + sumString + " "
+				+ getString(R.string.tap_to_update));
+		if (sum < 0) {
+			sumTextView.setTextColor(Color.RED);
+		} else {
+			sumTextView.setTextColor(Color.GREEN);
+		}
+	}
+
+	/**
+	 * On click on set total currency button, open pop up with choice
+	 */
+	private void setTotalCurrency() {
+		startActivityForResult(new Intent(Intent.ACTION_PICK, null, this,
+				EditCurrenciesActivity.class), Accountoid.RESULT_PICK_CURRENCY);
 	}
 
 	@Override
 	protected Dialog onCreateDialog(int id) {
-		Dialog box = null;
 		switch (id) {
 		case DIALOG_DELETE_ALL:
-
 			AlertDialog.Builder alert = new Builder(this);
 			alert.setMessage(R.string.delete_all_confirm_message);
 			alert.setTitle(R.string.delete_all_confirm_title);
@@ -155,13 +194,13 @@ public class BrowseActivity extends ListActivity {
 			});
 			alert.setCancelable(true);
 			alert.setNegativeButton(R.string.no, null);
-			box = alert.create();
-			break;
+
+			return alert.create();
 
 		default:
 			break;
 		}
-		return box;
+		return null;
 	}
 
 	@Override
@@ -172,6 +211,8 @@ public class BrowseActivity extends ListActivity {
 		menu.add(0, MENU_ITEM_DELETE_ALL, 0, R.string.browse_delete_all);
 		menu.add(0, MENU_EDIT_CATEGORIES, 0, R.string.browse_edit_categories);
 		menu.add(0, MENU_EDIT_CURRENCIES, 0, R.string.browse_edit_currencies);
+		menu.add(0, MENU_EDIT_TOTAL_CURRENCY, 0,
+				R.string.browse_edit_total_currency);
 
 		return true;
 	}
@@ -197,6 +238,9 @@ public class BrowseActivity extends ListActivity {
 			return true;
 		case MENU_EDIT_CURRENCIES:
 			editCurrencies();
+			return true;
+		case MENU_EDIT_TOTAL_CURRENCY:
+			setTotalCurrency();
 			return true;
 		}
 		return super.onOptionsItemSelected(item);
@@ -224,8 +268,7 @@ public class BrowseActivity extends ListActivity {
 		Log.d(TAG, "Remove ammount " + id);
 		model.getDataBase().deleteAccount(id);
 		// Update view
-		// If I used a provider, it would have been done automatically
-		adapter.changeCursor(model.getDataBase().getAccountList());
+		updateViews();
 	}
 
 	public void askRemoveAllAccounts() {

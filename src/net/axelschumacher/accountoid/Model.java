@@ -1,7 +1,7 @@
 package net.axelschumacher.accountoid;
 
 import java.text.DateFormat;
-import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.Currency;
 
 import android.content.Context;
@@ -11,60 +11,32 @@ import android.content.Context;
  */
 public class Model {
 	@SuppressWarnings("unused")
-	private static final String TAG = "Model"; 
-
-	/**
-	 * Handle Currency decimal format
-	 */
-	@SuppressWarnings("serial")
-	private class LocalDecimalFormat extends DecimalFormat {
-		@SuppressWarnings("unused")
-		private static final String TAG = "LocalDecimalFormat"; 
-		private int lastFraction = -1;
-
-		public LocalDecimalFormat(String string) {
-			super(string);
-		}
-
-		public final LocalDecimalFormat setFraction(int f) {
-			if (f == lastFraction)
-				return this;
-			String format = "#";
-			if (f > 0)
-				format = format.concat(".");
-			for (int i = 0; i < f; i++)
-				format = format.concat("#");
-			lastFraction = f;
-			return this;
-		}
-
-	}
+	private static final String TAG = "Model";
 
 	public Model(Context context) {
-		db = new AccountoidDataBase(context);
-		df = new LocalDecimalFormat("#.##");
+		dataBase = new AccountoidDataBase(context);
+		numberFormat = NumberFormat.getCurrencyInstance();
 		dateFormat = android.text.format.DateFormat.getDateFormat(context);
 	}
 
-	private AccountoidDataBase db;
+	private AccountoidDataBase dataBase;
 
-	private LocalDecimalFormat df;
-	
+	private NumberFormat numberFormat;
+
 	private DateFormat dateFormat;
-	
+
 	public DateFormat getDateFormat() {
 		return dateFormat;
 	}
 
 	public AccountoidDataBase getDataBase() {
-		return db;
+		return dataBase;
 	}
 
-	public DecimalFormat getDecimalFormat(Currency c) {
+	public NumberFormat getNumberFormat(Currency c) {
 		if (c != null) {
-			int fraction = c.getDefaultFractionDigits();
-			df.setFraction(fraction);
+			numberFormat.setCurrency(c);
 		}
-		return df;
+		return numberFormat;
 	}
 }
