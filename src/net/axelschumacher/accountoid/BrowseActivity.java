@@ -92,8 +92,11 @@ public class BrowseActivity extends ListActivity {
 			}
 		});
 		setListAdapter(adapter);
+		
+		//Add a click listener on total
+//		Text
 	}
-	
+
 	@Override
 	protected void onPause() {
 		super.onPause();
@@ -110,7 +113,23 @@ public class BrowseActivity extends ListActivity {
 	protected void onResume() {
 		super.onResume();
 		// Update view
+		updateViews();
+	}
+
+	private void updateViews() {
 		adapter.changeCursor(model.getDataBase().getAccountList());
+		TextView sumTextView = (TextView) findViewById(R.id.browse_total);
+		Float sum = model.getDataBase().getTransactionsSum();
+		if (sum != null) {
+			sumTextView.setText(getString(R.string.total)
+					+ ": "+model.getDecimalFormat(null).format(sum)+Currency.getInstance("USD").getSymbol());
+			if (sum < 0) {
+				sumTextView.setTextColor(Color.RED);
+			} else {
+				sumTextView.setTextColor(Color.GREEN);
+
+			}
+		}
 	}
 
 	@Override
@@ -208,7 +227,7 @@ public class BrowseActivity extends ListActivity {
 		Log.d(TAG, "Remove all ammounts");
 		model.getDataBase().deleteAllAccounts();
 		// Update view
-		adapter.changeCursor(model.getDataBase().getAccountList());
+		updateViews();
 	}
 
 	@Override

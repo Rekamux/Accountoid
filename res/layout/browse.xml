@@ -3,14 +3,20 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:orientation="vertical" >
-    
-    <Button xmlns:android="http://schemas.android.com/apk/res/android"
+
+    <TextView
+        android:id="@+id/browse_total"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge" />
+
+    <Button
+        xmlns:android="http://schemas.android.com/apk/res/android"
         android:id="@+id/browse_button"
-        android:text="@string/browse_add"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:onClick="addAmmount"
-        />
+        android:text="@string/browse_add" />
 
     <ListView
         xmlns:android="http://schemas.android.com/apk/res/android"
