@@ -12,6 +12,7 @@ import android.app.ListActivity;
 import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.os.Bundle;
@@ -53,6 +54,9 @@ public class EditCurrenciesActivity extends ListActivity {
 	private final static String BUNDLE_BEING_DELETED_ID = "ID";
 	private final static String BUNDLE_ACCOUNTS_COUNT = "COUNT";
 
+	/** Timestamp file name */
+	String TIMESTAMP_FILENAME = "timestamp";
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -68,43 +72,38 @@ public class EditCurrenciesActivity extends ListActivity {
 		Cursor cursor = model.getDataBase().getCurrencies();
 		adapter = new SimpleCursorAdapter(this, R.layout.currencies_cols,
 				cursor, new String[] { Currencies.CODE, Currencies.VALUE },
-				new int[] { R.id.currencies_cols_text1});
+				new int[] { R.id.currencies_cols_text1 });
 
 		// To have a personalized render
 		adapter.setViewBinder(new SimpleCursorAdapter.ViewBinder() {
 			public boolean setViewValue(View view, Cursor cursor, int column) {
 				TextView tv = (TextView) view;
-					String currencyCode = cursor.getString(cursor
-							.getColumnIndex(Currencies.CODE));
-					Currency currency = Currency.getInstance(currencyCode);
-					Currency usd = Currency.getInstance("USD");
-					float value = cursor.getFloat(cursor.getColumnIndex(Currencies.VALUE));
-					String text;
-					if (value != 0)
-						text = new DecimalFormat("#.####").format(1.0/value)+usd.getSymbol();
-					else
-						text = "";
-					tv.setText(currency.getSymbol() + " (" + currencyCode + ") (Value: "+text+")");
+				String currencyCode = cursor.getString(cursor
+						.getColumnIndex(Currencies.CODE));
+				Currency currency = Currency.getInstance(currencyCode);
+				Currency usd = Currency.getInstance("USD");
+				float value = cursor.getFloat(cursor
+						.getColumnIndex(Currencies.VALUE));
+				String text;
+				if (value != 0)
+					text = new DecimalFormat("#.####").format(1.0 / value)
+							+ usd.getSymbol();
+				else
+					text = "";
+				tv.setText(currency.getSymbol() + " (" + currencyCode
+						+ ") (Value: " + text + ")");
 				return true;
 			}
 		});
 		setListAdapter(adapter);
-		
-		updateUpdateTimestamp();
+
+		updateRates();
 	}
-	
+
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
 		model.getDataBase().closeDataBase();
-	}
-	
-	private void updateUpdateTimestamp()
-	{
-		TextView lastRate = (TextView) findViewById(R.id.currency_last_update);
-		Calendar c = Calendar.getInstance();
-		c.setTimeInMillis(Model.lastRateUpdate*1000L);
-		lastRate.setText(getString(R.string.last_update)+": "+c.get(Calendar.YEAR)+"-"+(c.get(Calendar.MONTH)+1)+"-"+c.get(Calendar.DAY_OF_MONTH));
 	}
 
 	@Override
@@ -112,7 +111,6 @@ public class EditCurrenciesActivity extends ListActivity {
 		super.onResume();
 		// Update view
 		adapter.changeCursor(model.getDataBase().getCurrencies());
-		updateUpdateTimestamp();
 	}
 
 	@Override
@@ -178,22 +176,33 @@ public class EditCurrenciesActivity extends ListActivity {
 		}
 		return super.onOptionsItemSelected(item);
 	}
-	
+
 	/**
 	 * Updates rates in background
 	 */
-	private void updateRates()
-	{
-		Toast toast = Toast.makeText(this, R.string.start_update, Toast.LENGTH_SHORT);
+	private void updateRates() {
+		Toast toast = Toast.makeText(this, R.string.start_update,
+				Toast.LENGTH_SHORT);
 		toast.show();
-		UpdateRatesTask task = new UpdateRatesTask(this)
-		{
+		UpdateRatesTask task = new UpdateRatesTask(this) {
 			@Override
 			protected void onPostExecute(Object result) {
 				super.onPostExecute(result);
 				// Update view
 				adapter.changeCursor(model.getDataBase().getCurrencies());
-				updateUpdateTimestamp();
+				SharedPreferences settings = getSharedPreferences(
+						Accountoid.PREFS_NAME, 0);
+				long timestamp = settings
+						.getLong(Accountoid.UPDATE_RATES_TIMESTAMP, -1);
+				if (timestamp != -1) {
+					TextView lastRate = (TextView) findViewById(R.id.currency_last_update);
+					Calendar c = Calendar.getInstance();
+					c.setTimeInMillis(timestamp * 1000L);
+					String date = model.getDateFormat().format(c.getTime());
+					lastRate.setText(getString(R.string.last_update) + ": " + date);
+				} else
+					Log.e(TAG, "preference " + Accountoid.UPDATE_RATES_TIMESTAMP
+							+ " can't be found");
 			}
 		};
 		Object[] o = null;

@@ -56,8 +56,10 @@
     <string name="category_done_button">Done</string>
     <string name="rates_update_done">Updates have been successfully updated</string>
     <string name="rates_update_failed">Cannot update rates</string>
-    <string name="start_update">Fetching rates...</string>
+    <string name="start_update">Fetching rates…</string>
     <string name="browse_update_rates">Update rates</string>
     <string name="last_update">Last update</string>
+    <string name="browse_edit_categories">Edit categories</string>
+    <string name="browse_edit_currencies">Edit currencies</string>
 
 </resources>

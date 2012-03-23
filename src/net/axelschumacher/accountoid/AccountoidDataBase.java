@@ -97,7 +97,7 @@ public class AccountoidDataBase {
 
         String orderBy = Account.DEFAULT_SORT_ORDER;
         
-        String projection[] = {Account._ID, Account.AMOUNT, Account.DESCRIPTION, Account.CURRENCY};
+        String projection[] = {Account._ID, Account.AMOUNT, Account.DESCRIPTION, Account.CURRENCY, Account.DATE};
         
         openDataBase();
         Cursor c = qb.query(database, projection, null, null, null, null, orderBy);

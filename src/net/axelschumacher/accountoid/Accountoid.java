@@ -25,6 +25,12 @@ public class Accountoid {
     /** Intent name of an id */
     public static final String INTENT_ID_NAME = "ID";
     
+    /** Preferences file */
+    public static final String PREFS_NAME = "accountoid_preferences";
+    
+    /** Timestamp field name */
+    public static final String UPDATE_RATES_TIMESTAMP = "timestamp";
+    
 	// This class cannot be instantiated
 	private Accountoid() {
 	}

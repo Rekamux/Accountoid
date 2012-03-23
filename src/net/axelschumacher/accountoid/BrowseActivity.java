@@ -1,5 +1,6 @@
 package net.axelschumacher.accountoid;
 
+import java.util.Calendar;
 import java.util.Currency;
 
 import net.axelschumacher.accountoid.Accountoid.Account;
@@ -23,7 +24,6 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
-import android.widget.Toast;
 
 public class BrowseActivity extends ListActivity {
 	/** Debug TAG */
@@ -40,7 +40,8 @@ public class BrowseActivity extends ListActivity {
 	public static final int MENU_ITEM_DELETE = 2;
 	public static final int MENU_ITEM_DELETE_ALL = 3;
 	public static final int MENU_ITEM_EDIT = 4;
-	public static final int MENU_UPDATE_RATES = 5;
+	public static final int MENU_EDIT_CURRENCIES = 5;
+	public static final int MENU_EDIT_CATEGORIES = 6;
 
 	/** Dialogs indexes */
 	public static final int DIALOG_DELETE_ALL = 1;
@@ -71,13 +72,18 @@ public class BrowseActivity extends ListActivity {
 						.getColumnIndex(Account.AMOUNT));
 				String description = cursor.getString(cursor
 						.getColumnIndex(Account.DESCRIPTION));
-				int currencyCol = cursor.getColumnIndex(Account.CURRENCY);
-				int currencyId = cursor.getInt(currencyCol);
-				Log.d(TAG, "For entry with currency "+currencyId);
-				String currencyCode = model.getDataBase().getCurrencyCodeFromIndex(currencyId);
+				int currencyId = cursor.getInt(cursor
+						.getColumnIndex(Account.CURRENCY));
+				long date = cursor.getLong(cursor.getColumnIndex(Account.DATE));
+				Calendar cal = Calendar.getInstance();
+				cal.setTimeInMillis(date * 1000L);
+				Log.d(TAG, "For entry with currency " + currencyId);
+				String currencyCode = model.getDataBase()
+						.getCurrencyCodeFromIndex(currencyId);
 				Currency currency = Currency.getInstance(currencyCode);
-				tv.setText(model.getDecimalFormat(currency).format(amount) + currency.getSymbol()+ 	" ("
-						+ description + ")");
+				tv.setText(model.getDecimalFormat(currency).format(amount)
+						+ currency.getSymbol() + " (" + description + ") "
+						+ model.getDateFormat().format(cal.getTime()));
 				if (amount <= 0.0)
 					tv.setTextColor(Color.RED);
 				else
@@ -86,16 +92,14 @@ public class BrowseActivity extends ListActivity {
 			}
 		});
 		setListAdapter(adapter);
-		
-		updateRates();
 	}
-	
+
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
 		model.getDataBase().closeDataBase();
 	}
-	
+
 	@Override
 	protected void onResume() {
 		super.onResume();
@@ -134,7 +138,8 @@ public class BrowseActivity extends ListActivity {
 
 		menu.add(0, MENU_ITEM_INSERT, 0, R.string.browse_add);
 		menu.add(0, MENU_ITEM_DELETE_ALL, 0, R.string.browse_delete_all);
-		menu.add(0, MENU_UPDATE_RATES, 0, R.string.browse_update_rates);
+		menu.add(0, MENU_EDIT_CATEGORIES, 0, R.string.browse_edit_categories);
+		menu.add(0, MENU_EDIT_CURRENCIES, 0, R.string.browse_edit_currencies);
 
 		return true;
 	}
@@ -155,11 +160,24 @@ public class BrowseActivity extends ListActivity {
 		case MENU_ITEM_DELETE_ALL:
 			askRemoveAllAccounts();
 			return true;
-		case MENU_UPDATE_RATES:
-			updateRates();
+		case MENU_EDIT_CATEGORIES:
+			editCategories();
+			return true;
+		case MENU_EDIT_CURRENCIES:
+			editCurrencies();
 			return true;
 		}
 		return super.onOptionsItemSelected(item);
+	}
+
+	private void editCurrencies() {
+		startActivity(new Intent(this, EditCurrenciesActivity.class));
+
+	}
+
+	private void editCategories() {
+		startActivity(new Intent(this, EditCategoriesActivity.class));
+
 	}
 
 	public void addAmmount(View v) {
@@ -238,17 +256,5 @@ public class BrowseActivity extends ListActivity {
 				EditTransactionActivity.class);
 		intent.putExtra(Accountoid.INTENT_ID_NAME, id);
 		startActivity(intent);
-	}
-	
-	/**
-	 * Updates rates in background
-	 */
-	private void updateRates()
-	{
-		Toast toast = Toast.makeText(this, R.string.start_update, Toast.LENGTH_SHORT);
-		toast.show();
-		UpdateRatesTask task = new UpdateRatesTask(this);
-		Object[] o = null;
-		task.execute(o);
 	}
 }

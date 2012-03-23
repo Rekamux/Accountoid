@@ -1,5 +1,6 @@
 package net.axelschumacher.accountoid;
 
+import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.util.Currency;
 
@@ -11,8 +12,6 @@ import android.content.Context;
 public class Model {
 	@SuppressWarnings("unused")
 	private static final String TAG = "Model"; 
-	
-	public static long lastRateUpdate;
 
 	/**
 	 * Handle Currency decimal format
@@ -44,11 +43,18 @@ public class Model {
 	public Model(Context context) {
 		db = new AccountoidDataBase(context);
 		df = new LocalDecimalFormat("#.##");
+		dateFormat = android.text.format.DateFormat.getDateFormat(context);
 	}
 
 	private AccountoidDataBase db;
 
 	private LocalDecimalFormat df;
+	
+	private DateFormat dateFormat;
+	
+	public DateFormat getDateFormat() {
+		return dateFormat;
+	}
 
 	public AccountoidDataBase getDataBase() {
 		return db;

@@ -19,6 +19,7 @@ import org.json.JSONTokener;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.util.Log;
@@ -48,8 +49,14 @@ public class UpdateRatesTask extends AsyncTask<Object, Object, Object> {
 		try {
 			JSONObject values = (JSONObject) new JSONTokener(feed).nextValue();
 			rates = values.getJSONObject("rates");
-			Model.lastRateUpdate = values.getLong("timestamp");
-			Log.d(TAG, "Timestamp: "+Model.lastRateUpdate);
+			long lastRateUpdate = values.getLong("timestamp");
+			Log.d(TAG, "Saved Timestamp: "+lastRateUpdate);
+			// Save it for next run
+			SharedPreferences settings = context.getSharedPreferences(
+					Accountoid.PREFS_NAME, 0);
+			SharedPreferences.Editor editor = settings.edit();
+			editor.putLong(Accountoid.UPDATE_RATES_TIMESTAMP, lastRateUpdate);
+			editor.commit();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
