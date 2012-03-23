@@ -36,6 +36,7 @@ public class UpdateRatesTask extends AsyncTask<Object, Object, Object> {
 	private Model model;
 
 	public UpdateRatesTask(Context c) {
+		Log.d(TAG, "Created task");
 		context = c;
 		model = new Model(c);
 	}
@@ -102,6 +103,7 @@ public class UpdateRatesTask extends AsyncTask<Object, Object, Object> {
 
 	@Override
 	protected void onPostExecute(Object result) {
+		Log.d(TAG, "Started task");
 		boolean success = (Boolean) result;
 		if (success) {
 			Toast toast = Toast.makeText(context, R.string.rates_update_done,

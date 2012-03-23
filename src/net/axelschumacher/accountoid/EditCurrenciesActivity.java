@@ -56,7 +56,7 @@ public class EditCurrenciesActivity extends ListActivity {
 	private final static String BUNDLE_ACCOUNTS_COUNT = "COUNT";
 	
 	/** Time to wait between two updates */
-	private static final long TIME_TO_WAIT = 3600;
+	private static final long TIME_TO_WAIT = 3600*24;
 
 	/** Timestamp file name */
 	String TIMESTAMP_FILENAME = "timestamp";
@@ -221,6 +221,7 @@ public class EditCurrenciesActivity extends ListActivity {
 	private void updateRates(long secondsToWait) {
 		long timestamp = getTimestampFromSettings();
 		long now = System.currentTimeMillis()/1000L;
+		Log.d(TAG, "timestamp: "+timestamp+" now: "+now+" ttw:"+secondsToWait);
 		if (now-timestamp < secondsToWait)
 		{
 			Log.d(TAG, "Update rates, havn't waited enough, return");
