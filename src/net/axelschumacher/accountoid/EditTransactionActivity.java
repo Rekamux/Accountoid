@@ -379,6 +379,8 @@ public class EditTransactionActivity extends Activity {
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		super.onActivityResult(requestCode, resultCode, data);
+		if (data == null)
+			return;
 		long id = data.getLongExtra(Accountoid.INTENT_ID_NAME, -1);
 		if (id == -1) {
 			Log.e(TAG, "Result from activity with non valid id !");

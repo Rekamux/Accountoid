@@ -4,6 +4,7 @@ import java.util.Calendar;
 import java.util.Currency;
 
 import net.axelschumacher.accountoid.Accountoid.Account;
+import net.axelschumacher.accountoid.Accountoid.Currencies;
 import android.app.AlertDialog;
 import android.app.AlertDialog.Builder;
 import android.app.Dialog;
@@ -101,6 +102,8 @@ public class BrowseActivity extends ListActivity {
 				setTotalCurrency();
 			}
 		});
+
+		updateViews();
 	}
 
 	@Override
@@ -134,11 +137,7 @@ public class BrowseActivity extends ListActivity {
 		}
 		switch (requestCode) {
 		case Accountoid.RESULT_PICK_CURRENCY:
-			SharedPreferences settings = getSharedPreferences(
-					Accountoid.PREFS_NAME, 0);
-			SharedPreferences.Editor editor = settings.edit();
-			editor.putLong(Accountoid.UPDATE_TOTAL_CURRENCY, id);
-			editor.commit();
+			saveCurrencyID(id);
 			break;
 
 		default:
@@ -146,16 +145,43 @@ public class BrowseActivity extends ListActivity {
 		}
 	}
 
+	/**
+	 * Save the currency id in preferences
+	 * 
+	 * @param id
+	 */
+	private void saveCurrencyID(long id) {
+		SharedPreferences settings = getSharedPreferences(
+				Accountoid.PREFS_NAME, 0);
+		SharedPreferences.Editor editor = settings.edit();
+		editor.putLong(Accountoid.UPDATE_TOTAL_CURRENCY, id);
+		editor.commit();
+	}
+
 	private void updateViews() {
 		adapter.changeCursor(model.getDataBase().getAccountList());
 		TextView sumTextView = (TextView) findViewById(R.id.browse_total);
+		// Find currency from settings
 		SharedPreferences settings = getSharedPreferences(
 				Accountoid.PREFS_NAME, 0);
 		long currencyID = settings
 				.getLong(Accountoid.UPDATE_TOTAL_CURRENCY, -1);
+		// If no settings, search for currency in database
 		if (currencyID == -1) {
 			Log.e(TAG, "No preference about total currency found !");
-			return;
+			Cursor currenciesCursor = model.getDataBase().getCurrencies();
+			if (currenciesCursor.getCount() == 0) {
+				Log.e(TAG, "No currency found at all !");
+				return;
+			}
+			// We have found a currency
+			currenciesCursor.moveToFirst();
+			// We will use it
+			currencyID = currenciesCursor.getLong(currenciesCursor
+					.getColumnIndex(Currencies._ID));
+			Log.i(TAG, "Found a currency: " + currencyID);
+			// But we also save it
+			saveCurrencyID(currencyID);
 		}
 		Float sum = model.getDataBase().getTransactionsSum(currencyID);
 		Currency currency = model.getDataBase()
