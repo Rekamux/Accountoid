@@ -482,16 +482,18 @@ public class AccountoidDataBase {
 
 		float sum = 0;
 		do {
-			Cursor cursorCurrency = getCurrencyCursorFromIndex(cursorAccount
-					.getLong(cursorAccount.getColumnIndex(Account.CURRENCY)));
+			long currentCurrencyIndex = cursorAccount.getLong(cursorAccount
+					.getColumnIndex(Account.CURRENCY));
+			Cursor cursorCurrency = getCurrencyCursorFromIndex(currentCurrencyIndex);
 			cursorCurrency.moveToFirst();
 			float value = cursorCurrency.getFloat(cursorCurrency
 					.getColumnIndex(Currencies.VALUE));
-			if (value != 0) {
-				float am = cursorAccount.getFloat(cursorAccount
-						.getColumnIndex(Account.AMOUNT));
-				sum += am / value * rate;
-			}
+			if (value == 0)
+				throw new SQLException("Currency at "+currentCurrencyIndex+" has no rate !");
+
+			float am = cursorAccount.getFloat(cursorAccount
+					.getColumnIndex(Account.AMOUNT));
+			sum += am / value * rate;
 
 		} while (cursorAccount.moveToNext());
 		closeDataBase();

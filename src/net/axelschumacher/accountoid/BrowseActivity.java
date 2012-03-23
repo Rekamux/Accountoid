@@ -14,6 +14,7 @@ import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.database.SQLException;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
@@ -172,6 +173,8 @@ public class BrowseActivity extends ListActivity {
 			Cursor currenciesCursor = model.getDataBase().getCurrencies();
 			if (currenciesCursor.getCount() == 0) {
 				Log.e(TAG, "No currency found at all !");
+				sumTextView.setText(getString(R.string.tap_to_update));
+				sumTextView.setTextColor(Color.WHITE);
 				return;
 			}
 			// We have found a currency
@@ -183,7 +186,15 @@ public class BrowseActivity extends ListActivity {
 			// But we also save it
 			saveCurrencyID(currencyID);
 		}
-		Float sum = model.getDataBase().getTransactionsSum(currencyID);
+		Float sum = null;
+		try {
+			sum = model.getDataBase().getTransactionsSum(currencyID);
+		} catch (SQLException e) {
+			// We miss a rate
+			sumTextView.setText(getString(R.string.tap_to_update));
+			sumTextView.setTextColor(Color.WHITE);
+			return;
+		}
 		Currency currency = model.getDataBase()
 				.getCurrencyFromIndex(currencyID);
 		String sumString = sum != null ? model.format(currency, sum) : "";

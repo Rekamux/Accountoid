@@ -351,5 +351,7 @@ public class EditCurrenciesActivity extends ListActivity {
 		}
 		// Update view
 		adapter.changeCursor(model.getDataBase().getCurrencies());
+		// We fetch rates for the new currency
+		updateRates(0);
 	}
 }
