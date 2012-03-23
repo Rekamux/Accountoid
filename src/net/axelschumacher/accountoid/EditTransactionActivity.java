@@ -18,6 +18,8 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnFocusChangeListener;
 import android.widget.AdapterView;
@@ -287,13 +289,13 @@ public class EditTransactionActivity extends Activity {
 
 	/**
 	 * Move given spinner to id from data base
+	 * 
 	 * @param spinner
 	 * @param id
 	 */
-	static public void setSpinnerAtCategory(
-			Spinner spinner,
-			long id) {
-		SimpleCursorAdapter adapter = (SimpleCursorAdapter) spinner.getAdapter();
+	static public void setSpinnerAtCategory(Spinner spinner, long id) {
+		SimpleCursorAdapter adapter = (SimpleCursorAdapter) spinner
+				.getAdapter();
 		for (int i = 0; i < adapter.getCount(); i++) {
 			Cursor c = (Cursor) (adapter.getItem(i));
 			if (c.getLong(c.getColumnIndex(Categories._ID)) == id) {
@@ -378,20 +380,19 @@ public class EditTransactionActivity extends Activity {
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		super.onActivityResult(requestCode, resultCode, data);
 		long id = data.getLongExtra(Accountoid.INTENT_ID_NAME, -1);
-		if (id == -1)
-		{
+		if (id == -1) {
 			Log.e(TAG, "Result from activity with non valid id !");
 			return;
 		}
 		switch (requestCode) {
 		case Accountoid.RESULT_PICK_CATEGORY:
-			((SimpleCursorAdapter) categorySpinner.getAdapter()).changeCursor(model
-					.getDataBase().getCategories());
+			((SimpleCursorAdapter) categorySpinner.getAdapter())
+					.changeCursor(model.getDataBase().getCategories());
 			setSpinnerAtCategory(categorySpinner, id);
 			break;
 		case Accountoid.RESULT_PICK_CURRENCY:
-			((SimpleCursorAdapter) currencySpinner.getAdapter()).changeCursor(model
-					.getDataBase().getCurrencies());
+			((SimpleCursorAdapter) currencySpinner.getAdapter())
+					.changeCursor(model.getDataBase().getCurrencies());
 			setSpinnerAtCategory(currencySpinner, id);
 			break;
 
@@ -435,10 +436,36 @@ public class EditTransactionActivity extends Activity {
 					selectedCurrency);
 		}
 		String formated = model.getNumberFormat(currency).format(amount);
-		Log.d(TAG, "Formated before regexp: "+formated);
+		Log.d(TAG, "Formated before regexp: " + formated);
 		formated = formated.replaceAll("[^0-9.-]", "");
-		Log.d(TAG, "Formated after regexp: "+formated);
+		Log.d(TAG, "Formated after regexp: " + formated);
 		return formated;
+	}
+
+	private static final int MENU_ITEM_SAVE = 0;
+	private static final int MENU_ITEM_CANCEL = 1;
+
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		super.onCreateOptionsMenu(menu);
+
+		menu.add(0, MENU_ITEM_SAVE, 0, R.string.save_transaction);
+		menu.add(0, MENU_ITEM_CANCEL, 0, R.string.cancel_transaction);
+
+		return true;
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+		case MENU_ITEM_SAVE:
+			saveTransaction(null);
+			return true;
+		case MENU_ITEM_CANCEL:
+			cancelTransaction(null);
+			return true;
+		}
+		return super.onOptionsItemSelected(item);
 	}
 
 	/**
