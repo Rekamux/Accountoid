@@ -54,6 +54,9 @@ public class EditCurrenciesActivity extends ListActivity {
 	/** Bundle data */
 	private final static String BUNDLE_BEING_DELETED_ID = "ID";
 	private final static String BUNDLE_ACCOUNTS_COUNT = "COUNT";
+	
+	/** Time to wait between two updates */
+	private static final long TIME_TO_WAIT = 3600;
 
 	/** Timestamp file name */
 	String TIMESTAMP_FILENAME = "timestamp";
@@ -112,7 +115,7 @@ public class EditCurrenciesActivity extends ListActivity {
 					}
 				});
 
-		updateRates();
+		updateRates(TIME_TO_WAIT);
 	}
 
 	@Override
@@ -192,16 +195,37 @@ public class EditCurrenciesActivity extends ListActivity {
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 		case MENU_UPDATE_RATES:
-			updateRates();
+			updateRates(0);
 			return true;
 		}
 		return super.onOptionsItemSelected(item);
 	}
+	
+	/**
+	 * @return the last timestamp stored in the settings, or -1 if not found
+	 */
+	private long getTimestampFromSettings()
+	{
+		adapter.changeCursor(model.getDataBase().getCurrencies());
+		SharedPreferences settings = getSharedPreferences(
+				Accountoid.PREFS_NAME, 0);
+		return settings.getLong(
+				Accountoid.UPDATE_RATES_TIMESTAMP, -1);
+		
+	}
 
 	/**
 	 * Updates rates in background
+	 * @param secondsToWait seconds to wait since the last known update
 	 */
-	private void updateRates() {
+	private void updateRates(long secondsToWait) {
+		long timestamp = getTimestampFromSettings();
+		long now = System.currentTimeMillis()/1000L;
+		if (now-timestamp < secondsToWait)
+		{
+			Log.d(TAG, "Update rates, havn't waited enough, return");
+			return;
+		}
 		Toast toast = Toast.makeText(this, R.string.start_update,
 				Toast.LENGTH_SHORT);
 		toast.show();
@@ -209,12 +233,8 @@ public class EditCurrenciesActivity extends ListActivity {
 			@Override
 			protected void onPostExecute(Object result) {
 				super.onPostExecute(result);
+				long timestamp = getTimestampFromSettings();
 				// Update view
-				adapter.changeCursor(model.getDataBase().getCurrencies());
-				SharedPreferences settings = getSharedPreferences(
-						Accountoid.PREFS_NAME, 0);
-				long timestamp = settings.getLong(
-						Accountoid.UPDATE_RATES_TIMESTAMP, -1);
 				if (timestamp != -1) {
 					TextView lastRate = (TextView) findViewById(R.id.currency_last_update);
 					Calendar c = Calendar.getInstance();
