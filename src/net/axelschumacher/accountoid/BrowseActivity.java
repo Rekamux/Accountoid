@@ -91,6 +91,12 @@ public class BrowseActivity extends ListActivity {
 	}
 	
 	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+		model.getDataBase().closeDataBase();
+	}
+	
+	@Override
 	protected void onResume() {
 		super.onResume();
 		// Update view
@@ -136,7 +142,6 @@ public class BrowseActivity extends ListActivity {
 	@Override
 	public boolean onPrepareOptionsMenu(Menu menu) {
 		super.onPrepareOptionsMenu(menu);
-		Log.v(TAG, "onPrepareOptionMenu");
 		return true;
 	}
 

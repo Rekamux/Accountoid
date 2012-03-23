@@ -58,5 +58,6 @@
     <string name="rates_update_failed">Cannot update rates</string>
     <string name="start_update">Fetching rates...</string>
     <string name="browse_update_rates">Update rates</string>
+    <string name="last_update">Last update</string>
 
 </resources>

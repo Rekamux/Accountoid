@@ -73,6 +73,12 @@ public class EditCategoriesActivity extends ListActivity {
 	}
 	
 	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+		model.getDataBase().closeDataBase();
+	}
+	
+	@Override
 	protected Dialog onCreateDialog(int id, Bundle b) {
 		Log.d(TAG, "onCreateDialog id="+id+" bundle="+b);
 		if (id == DIALOG_USED_CATEGORY)

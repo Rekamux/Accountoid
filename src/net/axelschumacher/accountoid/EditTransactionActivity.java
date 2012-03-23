@@ -7,6 +7,7 @@ import java.util.Currency;
 import net.axelschumacher.accountoid.Accountoid.Account;
 import net.axelschumacher.accountoid.Accountoid.Categories;
 import net.axelschumacher.accountoid.Accountoid.Currencies;
+import net.axelschumacher.accountoid.Accountoid.States;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.AlertDialog.Builder;
@@ -68,7 +69,7 @@ public class EditTransactionActivity extends Activity {
 
 	/** Category selected index */
 	private int selectedCategory = -1;
-	
+
 	/** Id */
 	private long id = -1;
 
@@ -97,7 +98,7 @@ public class EditTransactionActivity extends Activity {
 	long initCategory;
 
 	/** Init state id */
-	long initState;
+	States initState;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -159,6 +160,12 @@ public class EditTransactionActivity extends Activity {
 		initCurrency();
 	}
 
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+		model.getDataBase().closeDataBase();
+	}
+
 	/**
 	 * Init the amount
 	 */
@@ -189,6 +196,23 @@ public class EditTransactionActivity extends Activity {
 
 	/**
 	 * Init the state
+	 */
+	private void initState() {
+		// Prepare list
+		ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
+				this, R.array.states, android.R.layout.simple_spinner_item);
+		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+		stateSpinner.setAdapter(adapter);
+		stateSpinner.setSelection(Accountoid.DEFAULT_STATE.ordinal());
+
+		// init when editing
+		if (state == STATE_EDIT) {
+			stateSpinner.setSelection(initState.ordinal());
+		}
+	}
+
+	/**
+	 * Init the currency
 	 */
 	private void initCurrency() {
 		startManagingCursor(cursorCurrency);
@@ -221,35 +245,19 @@ public class EditTransactionActivity extends Activity {
 
 		// init when editing
 		if (state == STATE_EDIT) {
-			int positionToSelect = 0;
 			for (int i = 0; i < currencyAdapter.getCount(); i++) {
 				Cursor c = (Cursor) (currencyAdapter.getItem(i));
-
-				Log.d(TAG, "id: " + currencyAdapter.getItemId(i) + " object: "
-						+ c.getLong(c.getColumnIndex(Currencies._ID)));
-				// TODO
+				if (c.getLong(c.getColumnIndex(Currencies._ID)) == initCurrency) {
+					currencySpinner.setSelection(i);
+					break;
+				}
 			}
-			categorySpinner.setSelection(positionToSelect);
 		}
 	}
 
 	/**
-	 * Init the state
+	 * Init the category
 	 */
-	private void initState() {
-		// Prepare list
-		ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
-				this, R.array.states, android.R.layout.simple_spinner_item);
-		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-		stateSpinner.setAdapter(adapter);
-		stateSpinner.setSelection(Accountoid.DEFAULT_STATE.ordinal());
-
-		// init when editing
-		if (state == STATE_EDIT) {
-			stateSpinner.setSelection((int) initState);
-		}
-	}
-
 	private void initCategory() {
 		// Prepare list
 		startManagingCursor(cursorCategory);
@@ -274,13 +282,13 @@ public class EditTransactionActivity extends Activity {
 
 		// init when editing
 		if (state == STATE_EDIT) {
-			int positionToSelect = 0;
 			for (int i = 0; i < categoryAdapter.getCount(); i++) {
-				Log.d(TAG, "id: " + categoryAdapter.getItemId(i) + " object: "
-						+ categoryAdapter.getItem(i));
-				// TODO
+				Cursor c = (Cursor) (categoryAdapter.getItem(i));
+				if (c.getLong(c.getColumnIndex(Categories._ID)) == initCategory) {
+					categorySpinner.setSelection(i);
+					break;
+				}
 			}
-			categorySpinner.setSelection(positionToSelect);
 		}
 	}
 
@@ -306,8 +314,11 @@ public class EditTransactionActivity extends Activity {
 				.getColumnIndex(Account.CATEGORY));
 		initCurrency = cursorAccount.getLong(cursorAccount
 				.getColumnIndex(Account.CURRENCY));
-		initState = cursorAccount.getLong(cursorAccount
-				.getColumnIndex(Account.STATE));
+		initState = States.values()[cursorAccount.getInt(cursorAccount
+				.getColumnIndex(Account.STATE))];
+		Log.d(TAG, "Existing values are: id: " + id + " amount: " + initAmount
+				+ " desc: " + initDescription + " cat: " + initCategory
+				+ " cur: " + initCurrency + " state: " + initState);
 	}
 
 	/**
@@ -343,6 +354,13 @@ public class EditTransactionActivity extends Activity {
 	@Override
 	protected void onResume() {
 		super.onResume();
+		if (state == STATE_EDIT) {
+			Cursor c = model.getDataBase().getAccount(id);
+			if (c.getCount() != 1) {
+				Log.i(TAG, "Transaction being edited has been deleted!");
+				finish();
+			}
+		}
 		// Update views
 		((SimpleCursorAdapter) currencySpinner.getAdapter()).changeCursor(model
 				.getDataBase().getCurrencies());
@@ -441,8 +459,7 @@ public class EditTransactionActivity extends Activity {
 
 		if (this.state == STATE_INSERT)
 			model.getDataBase().insertAccount(value);
-		else
-		{
+		else {
 			model.getDataBase().updateAccount(id, value);
 		}
 		returnBrowsing();

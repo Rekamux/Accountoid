@@ -42,17 +42,14 @@ public class UpdateRatesTask extends AsyncTask<Object, Object, Object> {
 	// http://josscrowcroft.github.com/open-exchange-rates/
 	private static final String ALL_USD_URL = "https://raw.github.com/currencybot/open-exchange-rates/master/latest.json";
 
-	long lastTimeStamp = 0;
-
 	private JSONObject updateJSON() throws ClientProtocolException, IOException {
 		String feed = readFeed();
 		JSONObject rates = null;
 		try {
 			JSONObject values = (JSONObject) new JSONTokener(feed).nextValue();
 			rates = values.getJSONObject("rates");
-			lastTimeStamp = values.getLong("timestamp");
-			Model.lastRateUpdate = lastTimeStamp;
-			Log.d(TAG, "Timestamp: "+lastTimeStamp);
+			Model.lastRateUpdate = values.getLong("timestamp");
+			Log.d(TAG, "Timestamp: "+Model.lastRateUpdate);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -80,10 +77,6 @@ public class UpdateRatesTask extends AsyncTask<Object, Object, Object> {
 		}
 
 		return builder.toString();
-	}
-
-	public long getLastTimeStamp() {
-		return lastTimeStamp;
 	}
 
 	@Override

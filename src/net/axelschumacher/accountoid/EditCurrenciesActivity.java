@@ -18,12 +18,14 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
+import android.widget.Toast;
 
 /**
  * Activity used to edit currencies
@@ -40,6 +42,7 @@ public class EditCurrenciesActivity extends ListActivity {
 
 	/** Menu buttons indexes */
 	public static final int MENU_ITEM_DELETE = 1;
+	public static final int MENU_UPDATE_RATES = 2;
 
 	/** Dialogs indexes */
 	public static final int DIALOG_CANNOT_FIND_CURRENCY = 1;
@@ -87,11 +90,21 @@ public class EditCurrenciesActivity extends ListActivity {
 		});
 		setListAdapter(adapter);
 		
+		updateUpdateTimestamp();
+	}
+	
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+		model.getDataBase().closeDataBase();
+	}
+	
+	private void updateUpdateTimestamp()
+	{
 		TextView lastRate = (TextView) findViewById(R.id.currency_last_update);
 		Calendar c = Calendar.getInstance();
-		c.setTimeInMillis(model.lastRateUpdate*1000L);
-		Log.d(TAG, "Timestamp: "+model.lastRateUpdate);
-		lastRate.setText(c.toString());
+		c.setTimeInMillis(Model.lastRateUpdate*1000L);
+		lastRate.setText(getString(R.string.last_update)+": "+c.get(Calendar.YEAR)+"-"+(c.get(Calendar.MONTH)+1)+"-"+c.get(Calendar.DAY_OF_MONTH));
 	}
 
 	@Override
@@ -99,12 +112,7 @@ public class EditCurrenciesActivity extends ListActivity {
 		super.onResume();
 		// Update view
 		adapter.changeCursor(model.getDataBase().getCurrencies());
-		
-		TextView lastRate = (TextView) findViewById(R.id.currency_last_update);
-		Calendar c = Calendar.getInstance();
-		c.setTimeInMillis(model.lastRateUpdate*1000L);
-		Log.d(TAG, "Timestamp: "+model.lastRateUpdate);
-		lastRate.setText(c.toString());
+		updateUpdateTimestamp();
 	}
 
 	@Override
@@ -150,6 +158,46 @@ public class EditCurrenciesActivity extends ListActivity {
 			return null;
 		}
 		return alert.create();
+	}
+
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		super.onCreateOptionsMenu(menu);
+
+		menu.add(0, MENU_UPDATE_RATES, 0, R.string.browse_update_rates);
+
+		return true;
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+		case MENU_UPDATE_RATES:
+			updateRates();
+			return true;
+		}
+		return super.onOptionsItemSelected(item);
+	}
+	
+	/**
+	 * Updates rates in background
+	 */
+	private void updateRates()
+	{
+		Toast toast = Toast.makeText(this, R.string.start_update, Toast.LENGTH_SHORT);
+		toast.show();
+		UpdateRatesTask task = new UpdateRatesTask(this)
+		{
+			@Override
+			protected void onPostExecute(Object result) {
+				super.onPostExecute(result);
+				// Update view
+				adapter.changeCursor(model.getDataBase().getCurrencies());
+				updateUpdateTimestamp();
+			}
+		};
+		Object[] o = null;
+		task.execute(o);
 	}
 
 	@Override

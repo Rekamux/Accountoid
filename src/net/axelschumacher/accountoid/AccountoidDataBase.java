@@ -23,7 +23,7 @@ public class AccountoidDataBase {
 
     private static final String TAG = "AccountoidDataBase";
 
-	private static final String DATABASE_NAME = "accountoid.db";
+	private static final String DATABASE_NAME = "accountoid.database";
 	private static final int DATABASE_VERSION = 2;
 	private static final String ACCOUNT_TABLE_NAME = "account";
 	private static final String CATEGORIES_TABLE_NAME = "categories";
@@ -43,8 +43,8 @@ public class AccountoidDataBase {
 		}
 
 		@Override
-		public void onCreate(SQLiteDatabase db) {
-			db.execSQL("CREATE TABLE " + ACCOUNT_TABLE_NAME + " ("
+		public void onCreate(SQLiteDatabase database) {
+			database.execSQL("CREATE TABLE " + ACCOUNT_TABLE_NAME + " ("
 					+ Account._ID + " INTEGER PRIMARY KEY,"
 					+ Account.CATEGORY + " INTEGER,"
 					+ Account.CURRENCY + " INTEGER,"
@@ -53,11 +53,11 @@ public class AccountoidDataBase {
 					+ Account.DESCRIPTION + " TEXT,"
 					+ Account.AMOUNT + " FLOAT"
 					+ ");");
-			db.execSQL("CREATE TABLE " + CATEGORIES_TABLE_NAME + " ("
+			database.execSQL("CREATE TABLE " + CATEGORIES_TABLE_NAME + " ("
 					+ Categories._ID + " INTEGER PRIMARY KEY,"
 					+ Categories.NAME + " TEXT UNIQUE"
 					+ ");");
-			db.execSQL("CREATE TABLE " + CURRENCIES_TABLE_NAME + " ("
+			database.execSQL("CREATE TABLE " + CURRENCIES_TABLE_NAME + " ("
 					+ Currencies._ID + " INTEGER PRIMARY KEY,"
 					+ Currencies.CODE + " TEXT UNIQUE,"
 					+ Currencies.VALUE + " FLOAT"
@@ -66,19 +66,21 @@ public class AccountoidDataBase {
 			// Insert at least the local currency
 			ContentValues value = new ContentValues();
 			value.put(Currencies.CODE, Currency.getInstance(Locale.getDefault()).getCurrencyCode());
-			db.insert(CURRENCIES_TABLE_NAME, null, value);
+			database.insert(CURRENCIES_TABLE_NAME, null, value);
 		}
 
 		@Override
-		public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+		public void onUpgrade(SQLiteDatabase database, int oldVersion, int newVersion) {
 			Log.w(TAG, "Upgrading database from version " + oldVersion + " to "
 					+ newVersion + ", which will destroy all old data");
-			db.execSQL("DROP TABLE IF EXISTS " + DATABASE_NAME);
-			onCreate(db);
+			database.execSQL("DROP TABLE IF EXISTS " + DATABASE_NAME);
+			onCreate(database);
 		}
 	}
 
     private DatabaseHelper openHelper;
+	
+	private SQLiteDatabase database = null;
     
     public AccountoidDataBase(Context context) {
 		openHelper = new DatabaseHelper(context);
@@ -97,8 +99,8 @@ public class AccountoidDataBase {
         
         String projection[] = {Account._ID, Account.AMOUNT, Account.DESCRIPTION, Account.CURRENCY};
         
-        SQLiteDatabase db = openHelper.getReadableDatabase();
-        Cursor c = qb.query(db, projection, null, null, null, null, orderBy);
+        openDataBase();
+        Cursor c = qb.query(database, projection, null, null, null, null, orderBy);
         
         return c;
 	}
@@ -112,16 +114,16 @@ public class AccountoidDataBase {
         String where = Account._ID+" = "+id;
         
         // We want everything
-        SQLiteDatabase db = openHelper.getReadableDatabase();
-        Cursor c = qb.query(db, null, where, null, null, null, orderBy);
+        openDataBase();
+        Cursor c = qb.query(database, null, where, null, null, null, orderBy);
         
         return c;
 	}
     
 	public boolean deleteAccount(long id) {
-		 SQLiteDatabase db = openHelper.getWritableDatabase();
+		openDataBase();
 		 int count;
-		 count = db.delete(ACCOUNT_TABLE_NAME, Account._ID + "=" + id, null);
+		 count = database.delete(ACCOUNT_TABLE_NAME, Account._ID + "=" + id, null);
 		 
 		 return count == 1;
 	}
@@ -156,8 +158,8 @@ public class AccountoidDataBase {
         if (!values.containsKey(Account.STATE))
         	values.put(Account.STATE, Accountoid.DEFAULT_STATE.ordinal());
 
-        SQLiteDatabase db = openHelper.getWritableDatabase();
-        long rowId = db.insert(ACCOUNT_TABLE_NAME, null, values);
+        openDataBase();
+        long rowId = database.insert(ACCOUNT_TABLE_NAME, null, values);
         if (rowId > 0) {
             Uri noteUri = ContentUris.withAppendedId(Account.CONTENT_URI, rowId);
             return noteUri;
@@ -167,9 +169,9 @@ public class AccountoidDataBase {
 	}
 
     public boolean updateAccount(long id, ContentValues values) {
-        SQLiteDatabase db = openHelper.getWritableDatabase();
+    	openDataBase();
         int count;
-        count = db.update(ACCOUNT_TABLE_NAME, values, Account._ID +"="+id, null);
+        count = database.update(ACCOUNT_TABLE_NAME, values, Account._ID +"="+id, null);
 
         return count == 1;
     }
@@ -180,8 +182,8 @@ public class AccountoidDataBase {
 	 * @param rate
 	 */
 	public void updateCurrencyRate(long id, ContentValues values) {
-        SQLiteDatabase db = openHelper.getWritableDatabase();
-        db.update(CURRENCIES_TABLE_NAME, values, Currencies._ID +"="+id, null);
+		openDataBase();
+        database.update(CURRENCIES_TABLE_NAME, values, Currencies._ID +"="+id, null);
 	}
 
     /**
@@ -196,8 +198,8 @@ public class AccountoidDataBase {
         
         String projection[] = {Categories._ID, Categories.NAME};
         
-        SQLiteDatabase db = openHelper.getReadableDatabase();
-        Cursor c = qb.query(db, projection, null, null, null, null, orderBy);
+        openDataBase();
+        Cursor c = qb.query(database, projection, null, null, null, null, orderBy);
         
         return c;
 	}
@@ -214,8 +216,8 @@ public class AccountoidDataBase {
         
         String projection[] = {Currencies._ID, Currencies.CODE, Currencies.VALUE};
         
-        SQLiteDatabase db = openHelper.getReadableDatabase();
-        Cursor c = qb.query(db, projection, null, null, null, null, orderBy);
+        openDataBase();
+        Cursor c = qb.query(database, projection, null, null, null, null, orderBy);
         
         return c;
 	}
@@ -234,8 +236,8 @@ public class AccountoidDataBase {
 
         Log.v(TAG, "Inserting category("+values.getAsString(Categories.NAME)+")");
         
-        SQLiteDatabase db = openHelper.getWritableDatabase();
-        long rowId = db.insert(CATEGORIES_TABLE_NAME, null, values);
+        openDataBase();
+        long rowId = database.insert(CATEGORIES_TABLE_NAME, null, values);
         if (rowId > 0) {
             Uri catUri = ContentUris.withAppendedId(Categories.CONTENT_URI, rowId);
             return catUri;
@@ -267,10 +269,10 @@ public class AccountoidDataBase {
         
         Log.v(TAG, "Inserting currency("+Currency.getInstance(code)+")");
         
-        SQLiteDatabase db = openHelper.getWritableDatabase();
+        openDataBase();
         long rowId;
         // How can I fore the printStackTrace if constraint error ? TODO
-		rowId = db.insert(CURRENCIES_TABLE_NAME, null, values);
+		rowId = database.insert(CURRENCIES_TABLE_NAME, null, values);
         if (rowId > 0) {
             Uri curUri = ContentUris.withAppendedId(Currencies.CONTENT_URI, rowId);
             return curUri;
@@ -294,8 +296,8 @@ public class AccountoidDataBase {
         String where = Currencies._ID+"="+index;
         
         
-        SQLiteDatabase db = openHelper.getReadableDatabase();
-        Cursor c = qb.query(db, projection, where, null, null, null, null);
+        openDataBase();
+        Cursor c = qb.query(database, projection, where, null, null, null, null);
         
         if (c.getCount() != 1)
         	throw new IndexOutOfBoundsException("No result found for this index");
@@ -330,9 +332,9 @@ public class AccountoidDataBase {
 	 * @param id
 	 */
 	public boolean deleteCurrency(long id) {
-		 SQLiteDatabase db = openHelper.getWritableDatabase();
+		 SQLiteDatabase database = openHelper.getWritableDatabase();
 		 int count;
-		 count = db.delete(CURRENCIES_TABLE_NAME, Account._ID + "=" + id, null);
+		 count = database.delete(CURRENCIES_TABLE_NAME, Account._ID + "=" + id, null);
 		 
 		 return count == 1;
 	}
@@ -342,9 +344,9 @@ public class AccountoidDataBase {
 	 * @param id
 	 */
 	public boolean deleteCategory(long id) {
-		 SQLiteDatabase db = openHelper.getWritableDatabase();
+		 SQLiteDatabase database = openHelper.getWritableDatabase();
 		 int count;
-		 count = db.delete(CATEGORIES_TABLE_NAME, Account._ID + "=" + id, null);
+		 count = database.delete(CATEGORIES_TABLE_NAME, Account._ID + "=" + id, null);
 		 
 		 return count == 1;
 	}
@@ -357,8 +359,8 @@ public class AccountoidDataBase {
 	{
         String where = Account.CURRENCY+"="+id;
         
-        SQLiteDatabase db = openHelper.getReadableDatabase();
-        db.delete(ACCOUNT_TABLE_NAME, where, null);
+        openDataBase();
+        database.delete(ACCOUNT_TABLE_NAME, where, null);
 	}
 	
 	/**
@@ -368,8 +370,8 @@ public class AccountoidDataBase {
 	public void deleteAccountUsingCategory(long id) {
         String where = Account.CATEGORY+"="+id;
         
-        SQLiteDatabase db = openHelper.getReadableDatabase();
-        db.delete(ACCOUNT_TABLE_NAME, where, null);
+        openDataBase();
+        database.delete(ACCOUNT_TABLE_NAME, where, null);
 	}
 
 	/**
@@ -384,8 +386,8 @@ public class AccountoidDataBase {
         String projection[] = {Account._ID};
         String where = Account.CURRENCY+"="+id;
         
-        SQLiteDatabase db = openHelper.getReadableDatabase();
-        Cursor c = qb.query(db, projection, where, null, null, null, null);
+        openDataBase();
+        Cursor c = qb.query(database, projection, where, null, null, null, null);
         
         return c.getCount();
 	}
@@ -402,9 +404,27 @@ public class AccountoidDataBase {
         String projection[] = {Account._ID};
         String where = Account.CATEGORY+"="+id;
         
-        SQLiteDatabase db = openHelper.getReadableDatabase();
-        Cursor c = qb.query(db, projection, where, null, null, null, null);
+        openDataBase(); 
+        Cursor c = qb.query(database, projection, where, null, null, null, null);
         
         return c.getCount();
+	}
+	
+	/**
+	 * Mandatory call to avoid open never closed errors
+	 */
+	public void closeDataBase()
+	{
+		if (database != null)
+		{
+			database.close();
+			database = null;
+		}
+	}
+	
+	private void openDataBase()
+	{
+		if (database == null)
+			database = openHelper.getReadableDatabase();
 	}
 }
